@@ -9,7 +9,7 @@ part of 'moor_database.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class Measure extends DataClass implements Insertable<Measure> {
   final int id;
-  final DateTime timestamp;
+  final int timestamp;
   final double temperature;
   final double humidity;
   final double pressure;
@@ -27,13 +27,12 @@ class Measure extends DataClass implements Insertable<Measure> {
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
-    final dateTimeType = db.typeSystem.forDartType<DateTime>();
     final doubleType = db.typeSystem.forDartType<double>();
     final boolType = db.typeSystem.forDartType<bool>();
     return Measure(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      timestamp: dateTimeType
-          .mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
+      timestamp:
+          intType.mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
       temperature: doubleType
           .mapFromDatabaseResponse(data['${effectivePrefix}temperature']),
       humidity: doubleType
@@ -51,7 +50,7 @@ class Measure extends DataClass implements Insertable<Measure> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return Measure(
       id: serializer.fromJson<int>(json['id']),
-      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      timestamp: serializer.fromJson<int>(json['timestamp']),
       temperature: serializer.fromJson<double>(json['temperature']),
       humidity: serializer.fromJson<double>(json['humidity']),
       pressure: serializer.fromJson<double>(json['pressure']),
@@ -64,7 +63,7 @@ class Measure extends DataClass implements Insertable<Measure> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'timestamp': serializer.toJson<int>(timestamp),
       'temperature': serializer.toJson<double>(temperature),
       'humidity': serializer.toJson<double>(humidity),
       'pressure': serializer.toJson<double>(pressure),
@@ -100,7 +99,7 @@ class Measure extends DataClass implements Insertable<Measure> {
 
   Measure copyWith(
           {int id,
-          DateTime timestamp,
+          int timestamp,
           double temperature,
           double humidity,
           double pressure,
@@ -157,7 +156,7 @@ class Measure extends DataClass implements Insertable<Measure> {
 
 class MeasuresCompanion extends UpdateCompanion<Measure> {
   final Value<int> id;
-  final Value<DateTime> timestamp;
+  final Value<int> timestamp;
   final Value<double> temperature;
   final Value<double> humidity;
   final Value<double> pressure;
@@ -183,7 +182,7 @@ class MeasuresCompanion extends UpdateCompanion<Measure> {
   });
   MeasuresCompanion copyWith(
       {Value<int> id,
-      Value<DateTime> timestamp,
+      Value<int> timestamp,
       Value<double> temperature,
       Value<double> humidity,
       Value<double> pressure,
@@ -215,11 +214,11 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   }
 
   final VerificationMeta _timestampMeta = const VerificationMeta('timestamp');
-  GeneratedDateTimeColumn _timestamp;
+  GeneratedIntColumn _timestamp;
   @override
-  GeneratedDateTimeColumn get timestamp => _timestamp ??= _constructTimestamp();
-  GeneratedDateTimeColumn _constructTimestamp() {
-    return GeneratedDateTimeColumn(
+  GeneratedIntColumn get timestamp => _timestamp ??= _constructTimestamp();
+  GeneratedIntColumn _constructTimestamp() {
+    return GeneratedIntColumn(
       'timestamp',
       $tableName,
       true,
@@ -358,7 +357,7 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
       map['id'] = Variable<int, IntType>(d.id.value);
     }
     if (d.timestamp.present) {
-      map['timestamp'] = Variable<DateTime, DateTimeType>(d.timestamp.value);
+      map['timestamp'] = Variable<int, IntType>(d.timestamp.value);
     }
     if (d.temperature.present) {
       map['temperature'] = Variable<double, RealType>(d.temperature.value);

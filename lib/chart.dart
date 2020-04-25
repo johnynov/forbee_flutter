@@ -10,6 +10,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:connectivity/connectivity.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+// import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:provider/provider.dart';
 
@@ -30,7 +32,7 @@ Future<MeasurementSet> fetchPost() async {
 
   print("Making http request..");
 
-  var getMeasuresUrl = "http://192.168.4.1/measure";
+  var getMeasuresUrl = "http://192.168.4.1/measures/now";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
     print(response.statusCode);
@@ -38,9 +40,57 @@ Future<MeasurementSet> fetchPost() async {
   } else {
     throw Exception('Failed to make get request');
   }
-  return MeasurementSet.fromJson(json.decode(response.body));
+  return MeasurementSet.fromString(response.body);
 }
 
+Future<String> setToSleep() async {
+  print("Making GET http request..");
+
+  var getMeasuresUrl = "http://192.168.4.1/sleep";
+  final response = await http.get(getMeasuresUrl);
+  if (response.statusCode == 200) {
+    print('Setting to sleep');
+    return 'Moduł uśpiony, zzz...';
+  } else {
+    throw Exception('Failed to make get request');
+    return null;
+  }
+}
+
+Future<String> deleteMeasuresFile() async {
+  print("Making GET http request..");
+
+  var getMeasuresUrl = "http://192.168.4.1/measures/delete";
+  final response = await http.get(getMeasuresUrl);
+  if (response.statusCode == 200) {
+    return 'Pomiary pogrzebane żywcem.';
+  } else {
+    throw Exception('Failed to make get request');
+    return null;
+  }
+}
+
+String mapParameters(Map<dynamic, dynamic> map){
+  String paramstring;
+  map.forEach((k,v) => paramstring += ('?' + k.toString() + '=' + v.toString()));
+  return paramstring;
+}
+
+Future<String> syncTime() async {
+  print("Making POST http request..");
+  var url = "http://192.168.4.1/clock/set";
+  var ms = (new DateTime.now()).millisecondsSinceEpoch;
+  String time = (ms / 1000 + 3600*2).round().toString();
+  String u = url + "?time=" + time;
+  
+  http.Response response = await http.post(u);
+  if (response.statusCode == 200) {
+    return "Ok zajebiście";
+  } else {
+    throw Exception('Failed to make get request');
+    return "null";
+  }
+}
 
 
 class ChartScreen extends StatefulWidget {
@@ -53,32 +103,35 @@ class ChartScreen extends StatefulWidget {
 class _ChartScreenState extends State<ChartScreen> {
   final Connectivity _connectivity = Connectivity();
   Color _connectionStatus = Colors.red;
-  var _connectionStatusText = '';
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
-  
-  double _temperature = 0;
-  double _humidity = 0;
-  double _pressure = 0;
+
+  String _time = 'Czas pomiaru';
+  String _temperature = '?';
+  String _humidity = '?';
+  String _pressure = '?';
   Color color = Colors.redAccent[400];
 
   //TODO: implement on ESP32 decimal precision
-  double roundDouble(double value, int places) {
+  double roundDouble(String value, int places) {
     double mod = pow(10.0, places);
-    return ((value * mod).round().toDouble() / mod);
+    return ((double.parse(value) * mod).round().toDouble() / mod);
   }
 
   void _printValues(Map map) {
     setState(() {
-      _temperature = roundDouble(map['temperature'], 2);
-      _humidity = roundDouble(map['humidity'], 2);
-      _pressure = roundDouble(map['pressure'], 1);
+      _temperature = map['tempBME'];
+      _humidity = map['humBME'];
+      _pressure = map['pressBME'];
+      _time = map['time'];
     });
   }
+
   @override
   void initState() {
     super.initState();
     initConnectivity();
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
 
   @override
@@ -87,79 +140,297 @@ class _ChartScreenState extends State<ChartScreen> {
     super.dispose();
   }
 
+  List<bool> _selections1 = List.generate(3, (_) => false);
+  List<bool> _selections2 = List.generate(4, (_) => false);
+
   @override
   Widget build(BuildContext context) {
     var textStyle = TextStyle(fontSize: 18, height: 2);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Pomiary UL"),
-      ),
-      drawer: MainDrawer(),
-      body: Column(children: <Widget>[
-        Container(
-            margin: EdgeInsets.only(top: 30),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
+        appBar: AppBar(
+          title: Text("Pomiary UL"),
+        ),
+        drawer: MainDrawer(),
+        body: Column(
+          children: <Widget>[
+            Container(
+                margin: EdgeInsets.only(top: 30),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _roundedPhoto('assets/hive.jpg', _connectionStatus, 90.0)
-                    ],
-                  ),
-                ])),
-        Container(
-            margin: EdgeInsets.only(top: 20),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
+                      Column(
+                        children: [
+                          _roundedPhoto(
+                              'assets/hive.jpg', _connectionStatus, 100.0)
+                        ],
+                      ),
+                    ])),
+            Container(
+              margin: EdgeInsets.only(top: 20, bottom: 10),
+              child: Text('$_time ',
+                  style: TextStyle(color: Colors.black, fontSize: 15)),
+            ),
+            Container(
+                margin: EdgeInsets.only(top: 20),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      FaIcon(FontAwesomeIcons.temperatureHigh, color: color),
-                      Text('$_temperature st.C', style: textStyle),
-                      Text('Temperatura',
-                          style: TextStyle(color: Colors.red[600])),
-                    ],
-                  ),
-                  Column(
+                      Column(
+                        children: [
+                          FaIcon(FontAwesomeIcons.temperatureHigh,
+                              color: color),
+                          Text('$_temperature st.C', style: textStyle),
+                          Text('Temperatura',
+                              style: TextStyle(color: Colors.red[600])),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          FaIcon(FontAwesomeIcons.tint, color: Colors.blue),
+                          Text('$_humidity %', style: textStyle),
+                          Text('Wilgotność',
+                              style: TextStyle(color: Colors.blue[800])),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          FaIcon(FontAwesomeIcons.tachometerAlt,
+                              color: Colors.indigo[800]),
+                          Text('$_pressure hPa', style: textStyle),
+                          Text('Ciśnienie',
+                              style: TextStyle(color: Colors.indigo[800])),
+                        ],
+                      ),
+                      // Column(
+                      //   children: [
+                      //     FaIcon(FontAwesomeIcons.weightHanging,
+                      //         color: Colors.grey[800]),
+                      //     Text('0 kg', style: textStyle),
+                      //     Text('Waga',
+                      //         style: TextStyle(color: Colors.grey[800])),
+                      //   ],
+                      // ),
+                    ])),
+            Container(
+                margin: EdgeInsets.only(top: 30, right: 30, left: 30),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      FaIcon(FontAwesomeIcons.tint, color: Colors.blue),
-                      Text('$_humidity %', style: textStyle),
-                      Text('Wilgotność',
-                          style: TextStyle(color: Colors.blue[800])),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      FaIcon(FontAwesomeIcons.tachometerAlt,
-                          color: Colors.indigo[800]),
-                      Text('$_pressure hPa', style: textStyle),
-                      Text('Ciśnienie',
-                          style: TextStyle(color: Colors.indigo[800])),
-                    ],
-                  ),
-                  // Column(
-                  //   children: [
-                  //     FaIcon(FontAwesomeIcons.weightHanging,
-                  //         color: Colors.grey[800]),
-                  //     Text('0 kg', style: textStyle),
-                  //     Text('Waga',
-                  //         style: TextStyle(color: Colors.grey[800])),
-                  //   ],
-                  // ),
-                ])),
-      ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          var dataset = await fetchPost();
-          print(dataset.toString());
-          _printValues(dataset.toMap());
-          
-          // _printValues(dataset);
-        },
-        child: FaIcon(FontAwesomeIcons.download, color: Colors.grey[100]),
-        backgroundColor: color,
-      ),
-    );
+                      Column(children: [
+                        Icon(Icons.timer, color: Colors.yellow[700], size: 30),
+                        Text('czuwanie',
+                            style: TextStyle(fontSize: 14, height: 1)),
+                      ]),
+                      Column(
+                        children: [
+                          ToggleButtons(
+                              children: [
+                                Text('0.5',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold)),
+                                Text('1',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold)),
+                                Text('2',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold))
+                              ],
+                              color: Colors.greenAccent[700],
+                              isSelected: _selections1,
+                              borderRadius: BorderRadius.circular(10),
+                              borderWidth: 2,
+                              borderColor: Colors.greenAccent[700],
+                              selectedBorderColor: Colors.greenAccent[700],
+                              fillColor: Colors.greenAccent[700],
+                              selectedColor: Colors.white,
+                              onPressed: (int index) {
+                                setState(() {
+                                  for (int indexBtn = 0;
+                                      indexBtn < _selections1.length;
+                                      indexBtn++) {
+                                    if (indexBtn == index) {
+                                      _selections1[indexBtn] = true;
+                                    } else {
+                                      _selections1[indexBtn] = false;
+                                    }
+                                  }
+                                });
+                              })
+                        ],
+                      ),
+                    ])),
+            Container(
+              margin: EdgeInsets.only(top: 10, right: 30, left: 30, bottom: 10),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(children: [
+                      FaIcon(FontAwesomeIcons.moon,
+                          color: Colors.yellow[700], size: 27),
+                      Text('uśpienie',
+                          style: TextStyle(fontSize: 14, height: 1)),
+                    ]),
+                    Column(children: [
+                      ToggleButtons(
+                          children: [
+                            Text('15',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold)),
+                            Text('30',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold)),
+                            Text('60',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold)),
+                            Text('120',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold))
+                          ],
+                          color: Colors.green,
+                          isSelected: _selections2,
+                          borderRadius: BorderRadius.circular(10),
+                          borderWidth: 2,
+                          borderColor: Colors.greenAccent[700],
+                          selectedBorderColor: Colors.greenAccent[700],
+                          fillColor: Colors.greenAccent[700],
+                          selectedColor: Colors.white,
+                          onPressed: (int index) {
+                            setState(() {
+                              for (int indexBtn = 0;
+                                  indexBtn < _selections2.length;
+                                  indexBtn++) {
+                                if (indexBtn == index) {
+                                  _selections2[indexBtn] = true;
+                                } else {
+                                  _selections2[indexBtn] = false;
+                                }
+                              }
+                            });
+                          })
+                    ]),
+                  ]),
+            ),
+
+            Builder(
+              builder: (context) {
+                return  ButtonTheme(
+                    minWidth: MediaQuery.of(context).size.width - 60,
+                    height: 40.0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: new BorderRadius.circular(13.0)),
+                    child: (RaisedButton(
+                      onPressed: () async {
+
+
+                        var dataset = await fetchPost();
+                        print(dataset.toString());
+                        _printValues(dataset.toMap());
+
+                        final snackBar = SnackBar(
+                          content: Row(children: [
+                            Icon(Icons.access_time),
+                            SizedBox(width: 20),
+                            Expanded(child: Text(((new DateTime.now()).millisecondsSinceEpoch / 1000).round().toString())),
+                            ]));
+                        Scaffold.of(context).showSnackBar(snackBar);
+                      },
+                      child: const Text('Szybki pomiar',
+                          style: TextStyle(fontSize: 14)),
+                      color: Colors.green,
+                      textColor: Colors.white,
+                    )));
+              },
+            ),
+            Builder(
+              builder: (context) {
+                return ButtonTheme(
+                    minWidth: MediaQuery.of(context).size.width - 60,
+                    height: 40.0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: new BorderRadius.circular(13.0)),
+                    child: (RaisedButton(
+                      onPressed: () async {
+                        String reponse = await setToSleep();
+                        final snackBar = SnackBar(
+                          content: Row(children: [
+                            FaIcon(FontAwesomeIcons.moon, color: Colors.white),
+                            SizedBox(width: 20),
+                            Expanded(child: Text(reponse))
+                          ]));
+                        Scaffold.of(context).showSnackBar(snackBar);
+                      },
+                      child:
+                          Text('Uśpij moduł', style: TextStyle(fontSize: 14)),
+                      color: Colors.blue[800],
+                      textColor: Colors.white,
+                    )));
+              },
+            ),
+            Container(
+              margin: EdgeInsets.only(right: 30, left: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                Builder(
+                builder: (context) {
+                  return ButtonTheme(
+                      minWidth:  (MediaQuery.of(context).size.width- 60)/2  -10,
+                      height: 40.0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(13.0)),
+                      child: (RaisedButton(
+                        onPressed: () async {
+                          String reponse = await deleteMeasuresFile();
+                          final snackBar = SnackBar(
+                            content: Row(children: [
+                              FaIcon(FontAwesomeIcons.skull, color: Colors.white),
+                              SizedBox(width: 20),
+                              Expanded(child: Text(reponse))
+                            ]),
+                            // backgroundColor: Colors.black45,
+                          );
+                          Scaffold.of(context).showSnackBar(snackBar);
+                        },
+                        child:
+                            Text('Usuń pomiary', style: TextStyle(fontSize: 14)),
+                        color: Colors.pinkAccent,
+                        textColor: Colors.white,
+                      )));
+                },
+              ),
+              Builder(
+                builder: (context) {
+                  return ButtonTheme(
+                      minWidth: (MediaQuery.of(context).size.width- 60)/2 -10,
+                      height: 40.0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(13.0)),
+                      child: (RaisedButton(
+                        onPressed: () async {
+                          String reponse = await syncTime();
+                          final snackBar = SnackBar(
+                            content: Row(children: [
+                              Icon(Icons.av_timer, color:Colors.white),
+                              SizedBox(width: 20),
+                              Expanded(child: Text(reponse))
+                            ])
+                          );
+                          Scaffold.of(context).showSnackBar(snackBar);
+                        },
+                        child:
+                            Text('Synchronizuj czas', style: TextStyle(fontSize: 14)),
+                        color: Colors.green,
+                        textColor: Colors.white,
+                      )));
+                },
+              )
+              ],),
+            )
+          ],
+        ));
   }
 
   //   Platform messages are asynchronous, so we initialize in an async method.
@@ -202,10 +473,10 @@ class _ChartScreenState extends State<ChartScreen> {
           wifiName = "Failed to get Wifi IP";
         }
         setState(() {
-          if(wifiBSSID == '02:00:00:00:00:00'){
-          _connectionStatus = Colors.orange;
-          } else{
-          _connectionStatus = Colors.greenAccent[400];
+          if (wifiBSSID == '02:00:00:00:00:00') {
+            _connectionStatus = Colors.orange;
+          } else {
+            _connectionStatus = Colors.greenAccent[400];
           }
         });
         break;
@@ -220,38 +491,46 @@ class _ChartScreenState extends State<ChartScreen> {
         break;
     }
   }
-
 }
 
 //MeasurmentSet class contains parameters downloaded from hive.
 class MeasurementSet {
-  var temperature;
-  var humidity;
-  var pressure;
-
-  MeasurementSet({this.temperature, this.humidity, this.pressure});
+  var time;
+  var tempBME;
+  var pressBME;
+  var humBME;
+  var tempRTC;
 
   Map<String, dynamic> toMap() {
     return {
-      'temperature': temperature,
-      'pressure': pressure,
-      'humidity': humidity,
+      'time': time,
+      'tempBME': tempBME,
+      'pressBME': pressBME,
+      'humBME': humBME,
+      'tempRTC': tempRTC,
     };
   }
 
-  //Convert a MeasurmentSet into a Map. Keys correspond to database columns.
-  factory MeasurementSet.fromJson(Map<String, dynamic> json) {
+  MeasurementSet(
+      {this.time, this.tempBME, this.pressBME, this.humBME, this.tempRTC});
+
+  //Convert Measure String to results
+  factory MeasurementSet.fromString(String string) {
+    var array = string.split(';');
     return MeasurementSet(
-      temperature: json['temperature'],
-      pressure: json['pressure'],
-      humidity: json['humidity'],
-    );
+        time: DateFormat('HH:mm:ss dd/MMM/yyyy').format(
+            DateTime.fromMillisecondsSinceEpoch(int.parse(array[0]) * 1000)
+                .toUtc()),
+        tempBME: array[1],
+        humBME: array[2],
+        pressBME: array[3],
+        tempRTC: array[4]);
   }
 
-  @override
-  String toString() {
-    return 'MeasurmentSet{temperature: $temperature, name: $humidity, age: $pressure}';
-  }
+  // @override
+  // String toString() {
+  //   return 'MeasurmentSet{Time: $time, : $, age: $pressure}';
+  // }
 }
 
 class Beehive {
@@ -263,17 +542,17 @@ class Beehive {
   var productionTime;
   var uid;
 
-  Beehive({this.productionTime,
-          this.currentPass,
-          this.ssid,
-          this.defaultPass,
-          this.hasScale,
-          this.serialNumber,
-          this.uid});
+  Beehive(
+      {this.productionTime,
+      this.currentPass,
+      this.ssid,
+      this.defaultPass,
+      this.hasScale,
+      this.serialNumber,
+      this.uid});
 }
 
-Container _roundedPhoto(var assetPath, Color connStatus, var size) =>
-    Container(
+Container _roundedPhoto(var assetPath, Color connStatus, var size) => Container(
       width: size,
       height: size,
       margin: EdgeInsets.only(left: 15, bottom: 20),

@@ -6,7 +6,7 @@ part 'moor_database.g.dart';
 
 class Measures extends Table {
   IntColumn get id => integer().autoIncrement()();
-  DateTimeColumn get timestamp => dateTime().nullable()();
+  IntColumn get timestamp => integer().nullable()();
   RealColumn get temperature => real().nullable()();
   RealColumn get humidity => real().nullable()();
   RealColumn get pressure => real().nullable()();
@@ -30,9 +30,9 @@ class AppDatabase extends _$AppDatabase {
 
     Future<List<Measure>> getAllMeasures() => select(measures).get();
     Stream<List<Measure>> watchAllMeasures() => select(measures).watch();
-
     Future insertMeasure(Measure measure) => into(measures).insert(measure);
+    Future updateMeasure(Measure measure) => update(measures).replace(measure);
     Future deleteMeasure(Measure measure) => delete(measures).delete(measure);
-    
+
 }
 // Moor works by source gen. This file will all the generated code.

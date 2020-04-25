@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Provider(
       // builder: (_) => AppDatabase(),
-          child: MaterialApp(
+      child: MaterialApp(
         title: 'Forbee',
         debugShowCheckedModeBanner: false,
         home: ChartScreen(),
@@ -22,7 +22,8 @@ class MyApp extends StatelessWidget {
           '/charts': (_) => ChartScreen(),
           '/mytest': (_) => myTest(),
         },
-      ), create: (BuildContext context) {},
+      ),
+      create: (BuildContext context) {},
     );
   }
 }

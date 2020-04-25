@@ -11,6 +11,10 @@ import 'package:connectivity/connectivity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:android_wifi_info/android_wifi_info.dart';
+
+
+
 
 class myTest extends StatefulWidget {
   myTest({Key key, this.title}) : super(key: key);
@@ -46,6 +50,11 @@ class _myTestState extends State<myTest> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       result = await _connectivity.checkConnectivity();
+        final bssid = await AndroidWifiInfo.bssid;
+        final ssid = await AndroidWifiInfo.ssid;
+        print(bssid);
+        print(ssid);
+        print(result);
     } on PlatformException catch (e) {
       print(e.toString());
     }
