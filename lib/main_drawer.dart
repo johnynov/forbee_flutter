@@ -80,7 +80,7 @@ class MainDrawer extends StatelessWidget {
             ]),
             ListTile(
               leading: Image.asset('assets/line-chart.png',scale:1.0,height:30.0,width:30.0), 
-              title: Text('Pomiary'),
+              title: Text('Moje Pomiary'),
               onTap: () {
                 Navigator.push(
                   context,

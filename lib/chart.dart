@@ -11,13 +11,14 @@ import 'package:connectivity/connectivity.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import './data/moor_database.dart';
 // import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:provider/provider.dart';
 
 //TODO: zaimplementować dwie matody w klasie Measurment Class: toMap(), toJson() --> pierwsza to inputu do bazy, druga do ładowania do widoku
 
-Future<MeasurementSet> fetchPost() async {
+Future<Measure> fetchMeasures() async {
   print("Checking connectivity result");
 
   var connectivityResult = await (Connectivity().checkConnectivity());
@@ -30,17 +31,51 @@ Future<MeasurementSet> fetchPost() async {
     print(wifiName);
   }
 
-  print("Making http request..");
-
+  print("Making instant measure...");
   var getMeasuresUrl = "http://192.168.4.1/measures/now";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
-    print(response.statusCode);
-    print(response.body);
+    // print(response.statusCode);
+    // print(response.body);
+    List<String> values = response.body.split(';');
+    final measure = Measure(
+        id: null,
+        timestamp: int.parse(values[0]),
+        temperature: double.parse(values[1]),
+        humidity: double.parse(values[2]),
+        pressure: double.parse(values[3]),
+        boxTemperature: double.parse(values[4]),
+        sentToFirebase: null);
+    return measure;
   } else {
     throw Exception('Failed to make get request');
   }
-  return MeasurementSet.fromString(response.body);
+}
+
+Future<List<Measure>> fetchAllMeasures() async {
+  print("Getting all measures..");
+  var getMeasuresUrl = "http://192.168.4.1/measures/all";
+  final response = await http.get(getMeasuresUrl);
+  if (response.statusCode == 200) {
+    List<Measure> measuresList;
+    List measuresFromBody = response.body.split('\r\n');
+    for (var item in measuresFromBody) {
+      List<String> values = item.split(';');
+      final measure = Measure(
+          id: null,
+          timestamp: int.parse(values[0]),
+          temperature: double.parse(values[1]),
+          humidity: double.parse(values[2]),
+          pressure: double.parse(values[3]),
+          boxTemperature: double.parse(values[4]),
+          sentToFirebase: null);
+      measuresList.add(measure);
+    }
+  return measuresList;
+  } else {
+    throw Exception('Failed to make get request');
+    return null;
+  }
 }
 
 Future<String> setToSleep() async {
@@ -70,9 +105,10 @@ Future<String> deleteMeasuresFile() async {
   }
 }
 
-String mapParameters(Map<dynamic, dynamic> map){
+String mapParameters(Map<dynamic, dynamic> map) {
   String paramstring;
-  map.forEach((k,v) => paramstring += ('?' + k.toString() + '=' + v.toString()));
+  map.forEach(
+      (k, v) => paramstring += ('?' + k.toString() + '=' + v.toString()));
   return paramstring;
 }
 
@@ -80,18 +116,17 @@ Future<String> syncTime() async {
   print("Making POST http request..");
   var url = "http://192.168.4.1/clock/set";
   var ms = (new DateTime.now()).millisecondsSinceEpoch;
-  String time = (ms / 1000 + 3600*2).round().toString();
+  String time = (ms / 1000 + 3600 * 2).round().toString();
   String u = url + "?time=" + time;
-  
+
   http.Response response = await http.post(u);
   if (response.statusCode == 200) {
-    return "Ok zajebiście";
+    return "Ul jest na czasie.";
   } else {
     throw Exception('Failed to make get request');
     return "null";
   }
 }
-
 
 class ChartScreen extends StatefulWidget {
   ChartScreen({Key key}) : super(key: key);
@@ -117,12 +152,13 @@ class _ChartScreenState extends State<ChartScreen> {
     return ((double.parse(value) * mod).round().toDouble() / mod);
   }
 
-  void _printValues(Map map) {
+  void _printValues(Measure measure) {
+    Map measuretoJson = measure.toJson();
     setState(() {
-      _temperature = map['tempBME'];
-      _humidity = map['humBME'];
-      _pressure = map['pressBME'];
-      _time = map['time'];
+      _temperature = measuretoJson['temperature'].toString();
+      _humidity = measuretoJson['humidity'].toString();
+      _pressure = measuretoJson['pressure'].toString();
+      _time = measuretoJson['timestamp'].toString();
     });
   }
 
@@ -313,28 +349,28 @@ class _ChartScreenState extends State<ChartScreen> {
                     ]),
                   ]),
             ),
-
             Builder(
+              // szybki pomiar
               builder: (context) {
-                return  ButtonTheme(
+                return ButtonTheme(
                     minWidth: MediaQuery.of(context).size.width - 60,
                     height: 40.0,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(13.0)),
                     child: (RaisedButton(
                       onPressed: () async {
-
-
-                        var dataset = await fetchPost();
-                        print(dataset.toString());
-                        _printValues(dataset.toMap());
-
+                        Measure measure = await fetchMeasures();
+                        print(measure.toString());
+                        final database = Provider.of<AppDatabase>(context);
+                        //Seave to database
+                        database.insertMeasure(measure);
                         final snackBar = SnackBar(
-                          content: Row(children: [
-                            Icon(Icons.access_time),
-                            SizedBox(width: 20),
-                            Expanded(child: Text(((new DateTime.now()).millisecondsSinceEpoch / 1000).round().toString())),
-                            ]));
+                            content: Row(children: [
+                              Icon(Icons.thumb_up),
+                              SizedBox(width: 20),
+                              Expanded(child: Text("Pomiar zrobiony"))
+                            ]),
+                            duration: const Duration(seconds: 1));
                         Scaffold.of(context).showSnackBar(snackBar);
                       },
                       child: const Text('Szybki pomiar',
@@ -344,7 +380,26 @@ class _ChartScreenState extends State<ChartScreen> {
                     )));
               },
             ),
+            ButtonTheme(
+                minWidth: MediaQuery.of(context).size.width - 60,
+                height: 40.0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(13.0)),
+                child: (RaisedButton(
+                  onPressed: () async {
+                    final database = Provider.of<AppDatabase>(context);
+                    List<Measure> allMeasures = await fetchAllMeasures();
+                    for(Measure item in allMeasures){
+                      database.insertMeasure(item);
+                    }
+                  },
+                  child: const Text('Pobierz wszystkie pomiary',
+                      style: TextStyle(fontSize: 14)),
+                  color: Colors.yellow[800],
+                  textColor: Colors.white,
+                ))),
             Builder(
+              // uśpij moduł
               builder: (context) {
                 return ButtonTheme(
                     minWidth: MediaQuery.of(context).size.width - 60,
@@ -355,11 +410,13 @@ class _ChartScreenState extends State<ChartScreen> {
                       onPressed: () async {
                         String reponse = await setToSleep();
                         final snackBar = SnackBar(
-                          content: Row(children: [
-                            FaIcon(FontAwesomeIcons.moon, color: Colors.white),
-                            SizedBox(width: 20),
-                            Expanded(child: Text(reponse))
-                          ]));
+                            content: Row(children: [
+                              FaIcon(FontAwesomeIcons.moon,
+                                  color: Colors.white),
+                              SizedBox(width: 20),
+                              Expanded(child: Text(reponse))
+                            ]),
+                            duration: const Duration(seconds: 1));
                         Scaffold.of(context).showSnackBar(snackBar);
                       },
                       child:
@@ -374,60 +431,72 @@ class _ChartScreenState extends State<ChartScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                Builder(
-                builder: (context) {
-                  return ButtonTheme(
-                      minWidth:  (MediaQuery.of(context).size.width- 60)/2  -10,
-                      height: 40.0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(13.0)),
-                      child: (RaisedButton(
-                        onPressed: () async {
-                          String reponse = await deleteMeasuresFile();
-                          final snackBar = SnackBar(
-                            content: Row(children: [
-                              FaIcon(FontAwesomeIcons.skull, color: Colors.white),
-                              SizedBox(width: 20),
-                              Expanded(child: Text(reponse))
-                            ]),
-                            // backgroundColor: Colors.black45,
-                          );
-                          Scaffold.of(context).showSnackBar(snackBar);
-                        },
-                        child:
-                            Text('Usuń pomiary', style: TextStyle(fontSize: 14)),
-                        color: Colors.pinkAccent,
-                        textColor: Colors.white,
-                      )));
-                },
+                  Builder(
+                    // usuń pomiary
+                    builder: (context) {
+                      return ButtonTheme(
+                          minWidth:
+                              (MediaQuery.of(context).size.width - 60) / 2 - 10,
+                          height: 40.0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(13.0)),
+                          child: (RaisedButton(
+                            onPressed: () async {
+                              String reponse = await deleteMeasuresFile();
+                              final snackBar = SnackBar(
+                                content: Row(children: [
+                                  FaIcon(FontAwesomeIcons.skull,
+                                      color: Colors.white),
+                                  SizedBox(width: 20),
+                                  Expanded(child: Text(reponse)),
+                                ]),
+                                action: SnackBarAction(
+                                    label: 'OK', onPressed: () {}),
+                                duration: const Duration(seconds: 1),
+                                // backgroundColor: Colors.black45,
+                              );
+                              Scaffold.of(context).showSnackBar(snackBar);
+                            },
+                            child: Text('Usuń pomiary',
+                                style: TextStyle(fontSize: 14)),
+                            color: Colors.pinkAccent,
+                            textColor: Colors.white,
+                          )));
+                    },
+                  ),
+                  Builder(
+                    // sync time
+                    builder: (context) {
+                      return ButtonTheme(
+                          minWidth:
+                              (MediaQuery.of(context).size.width - 60) / 2 - 10,
+                          height: 40.0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(13.0)),
+                          child: (RaisedButton(
+                            onPressed: () async {
+                              String reponse = await syncTime();
+                              final snackBar = SnackBar(
+                                content: Row(children: [
+                                  Icon(Icons.av_timer, color: Colors.white),
+                                  SizedBox(width: 20),
+                                  Expanded(child: Text(reponse))
+                                ]),
+                                action: SnackBarAction(
+                                    label: 'OK', onPressed: () {}),
+                                duration: const Duration(seconds: 1),
+                              );
+                              Scaffold.of(context).showSnackBar(snackBar);
+                            },
+                            child: Text('Synchronizuj czas',
+                                style: TextStyle(fontSize: 14)),
+                            color: Colors.green,
+                            textColor: Colors.white,
+                          )));
+                    },
+                  )
+                ],
               ),
-              Builder(
-                builder: (context) {
-                  return ButtonTheme(
-                      minWidth: (MediaQuery.of(context).size.width- 60)/2 -10,
-                      height: 40.0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(13.0)),
-                      child: (RaisedButton(
-                        onPressed: () async {
-                          String reponse = await syncTime();
-                          final snackBar = SnackBar(
-                            content: Row(children: [
-                              Icon(Icons.av_timer, color:Colors.white),
-                              SizedBox(width: 20),
-                              Expanded(child: Text(reponse))
-                            ])
-                          );
-                          Scaffold.of(context).showSnackBar(snackBar);
-                        },
-                        child:
-                            Text('Synchronizuj czas', style: TextStyle(fontSize: 14)),
-                        color: Colors.green,
-                        textColor: Colors.white,
-                      )));
-                },
-              )
-              ],),
             )
           ],
         ));

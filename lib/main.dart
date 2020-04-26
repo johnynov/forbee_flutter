@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import './chart.dart';
 import './main_drawer.dart';
+import './myMeasures.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +13,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Provider(
-      // builder: (_) => AppDatabase(),
       child: MaterialApp(
         title: 'Forbee',
         debugShowCheckedModeBanner: false,
@@ -20,7 +20,8 @@ class MyApp extends StatelessWidget {
         routes: {
           '/home': (_) => MyHomePage(),
           '/charts': (_) => ChartScreen(),
-          '/mytest': (_) => myTest(),
+          '/wifitest': (_) => myTest(),
+          // '/myMeasures': (_) => myMeasures()
         },
       ),
       create: (BuildContext context) {},
