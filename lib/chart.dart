@@ -85,7 +85,7 @@ Future<String> syncTime() async {
   
   http.Response response = await http.post(u);
   if (response.statusCode == 200) {
-    return "Ok zajebiście";
+    return "Czas zsynchronizowany";
   } else {
     throw Exception('Failed to make get request');
     return "null";
@@ -171,7 +171,7 @@ class _ChartScreenState extends State<ChartScreen> {
                   style: TextStyle(color: Colors.black, fontSize: 15)),
             ),
             Container(
-                margin: EdgeInsets.only(top: 20),
+                margin: EdgeInsets.only(top: 20, bottom: 200),
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -211,109 +211,6 @@ class _ChartScreenState extends State<ChartScreen> {
                       //   ],
                       // ),
                     ])),
-            Container(
-                margin: EdgeInsets.only(top: 30, right: 30, left: 30),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(children: [
-                        Icon(Icons.timer, color: Colors.yellow[700], size: 30),
-                        Text('czuwanie',
-                            style: TextStyle(fontSize: 14, height: 1)),
-                      ]),
-                      Column(
-                        children: [
-                          ToggleButtons(
-                              children: [
-                                Text('0.5',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold)),
-                                Text('1',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold)),
-                                Text('2',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold))
-                              ],
-                              color: Colors.greenAccent[700],
-                              isSelected: _selections1,
-                              borderRadius: BorderRadius.circular(10),
-                              borderWidth: 2,
-                              borderColor: Colors.greenAccent[700],
-                              selectedBorderColor: Colors.greenAccent[700],
-                              fillColor: Colors.greenAccent[700],
-                              selectedColor: Colors.white,
-                              onPressed: (int index) {
-                                setState(() {
-                                  for (int indexBtn = 0;
-                                      indexBtn < _selections1.length;
-                                      indexBtn++) {
-                                    if (indexBtn == index) {
-                                      _selections1[indexBtn] = true;
-                                    } else {
-                                      _selections1[indexBtn] = false;
-                                    }
-                                  }
-                                });
-                              })
-                        ],
-                      ),
-                    ])),
-            Container(
-              margin: EdgeInsets.only(top: 10, right: 30, left: 30, bottom: 10),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(children: [
-                      FaIcon(FontAwesomeIcons.moon,
-                          color: Colors.yellow[700], size: 27),
-                      Text('uśpienie',
-                          style: TextStyle(fontSize: 14, height: 1)),
-                    ]),
-                    Column(children: [
-                      ToggleButtons(
-                          children: [
-                            Text('15',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('30',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('60',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('120',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold))
-                          ],
-                          color: Colors.green,
-                          isSelected: _selections2,
-                          borderRadius: BorderRadius.circular(10),
-                          borderWidth: 2,
-                          borderColor: Colors.greenAccent[700],
-                          selectedBorderColor: Colors.greenAccent[700],
-                          fillColor: Colors.greenAccent[700],
-                          selectedColor: Colors.white,
-                          onPressed: (int index) {
-                            setState(() {
-                              for (int indexBtn = 0;
-                                  indexBtn < _selections2.length;
-                                  indexBtn++) {
-                                if (indexBtn == index) {
-                                  _selections2[indexBtn] = true;
-                                } else {
-                                  _selections2[indexBtn] = false;
-                                }
-                              }
-                            });
-                          })
-                    ]),
-                  ]),
-            ),
-
             Builder(
               builder: (context) {
                 return  ButtonTheme(
@@ -333,7 +230,7 @@ class _ChartScreenState extends State<ChartScreen> {
                           content: Row(children: [
                             Icon(Icons.access_time),
                             SizedBox(width: 20),
-                            Expanded(child: Text(((new DateTime.now()).millisecondsSinceEpoch / 1000).round().toString())),
+                            Expanded(child: Text('Pobrano pomiar')),
                             ]));
                         Scaffold.of(context).showSnackBar(snackBar);
                       },

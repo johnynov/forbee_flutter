@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forbee/data/moor_database.dart';
-import 'package:forbee/test.dart';
+// import 'package:forbee/test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import './chart.dart';
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/home': (_) => MyHomePage(),
           '/charts': (_) => ChartScreen(),
-          '/mytest': (_) => myTest(),
+          // '/mytest': (_) => myTest(),
         },
       ),
       create: (BuildContext context) {},
