@@ -249,7 +249,7 @@ class _HiveScreenState extends State<HiveScreen> {
                   ),
                   Builder(
                     // szybki pomiar
-                    builder: (context) {
+                    builder: (BuildContext context) {
                           final database = Provider.of<AppDatabase>(context);
                           return ButtonTheme(
                           minWidth: MediaQuery.of(context).size.width - 120,
@@ -278,7 +278,8 @@ class _HiveScreenState extends State<HiveScreen> {
                           )));
                     },
                   ),
-                  Builder(builder: (context) {
+                  Builder(builder: (BuildContext context) {
+                    final database = Provider.of<AppDatabase>(context);
                     return ButtonTheme(
                         minWidth: MediaQuery.of(context).size.width - 60,
                         height: 40.0,
@@ -286,12 +287,11 @@ class _HiveScreenState extends State<HiveScreen> {
                             borderRadius: new BorderRadius.circular(13.0)),
                         child: (RaisedButton(
                           onPressed: () async {
-                            final database = Provider.of<AppDatabase>(context);
                             List<Measure> allMeasures =
                                 await fetchAllMeasures();
                             for (Measure item in allMeasures) {
                               final list =
-                                  await database.checkMeasureInDatabase(item);
+                              await database.checkMeasureInDatabase(item);
                               if (list.length == 0) {
                                 database.insertMeasure(item);
                               }
@@ -472,6 +472,7 @@ class _HiveScreenState extends State<HiveScreen> {
           }
         }
 
+      
         setState(() {
           if (macAddress == 'B4:E6:2D:F6:C9:8D') {
             _connectionStatus = Colors.greenAccent[400];

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'ui/Hive.dart';
 import 'ui/main_drawer.dart';
 import 'ui/Measures.dart';
+// import 'ui/home_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -17,14 +18,14 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Forbee',
         debugShowCheckedModeBanner: false,
-        home: HomePage(),
+        home: HiveScreen(),
         routes: {
           '/hive': (_) => HiveScreen(),
           '/myMeasures': (_) => MeasuresScreen(),
           '/databaseTest' : (_) => HomePage(),
         },
       ),
-      create: (BuildContext context) {},
+      // create: (BuildContext context) {},
     );
   }
 }

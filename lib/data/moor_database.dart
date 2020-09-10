@@ -1,6 +1,4 @@
-import 'package:moor/moor.dart';
 import 'package:moor_flutter/moor_flutter.dart';
-
 part 'moor_database.g.dart';
 
 class Measures extends Table {
@@ -12,8 +10,8 @@ class Measures extends Table {
   RealColumn get boxTemperature => real().nullable()();
   BoolColumn get sentToFirebase => boolean().withDefault(Constant(false))();
 
-  @override
-  Set<Column> get primaryKey => {timestamp};
+  // @override
+  // Set<Column> get primaryKey => {timestamp};
 }
 
 @UseMoor(tables: [Measures])
@@ -40,16 +38,16 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Measure>> checkMeasureInDatabase(Measure measure) =>
       (select(measures)..where((m) => m.timestamp.equals(measure.timestamp)))
           .get();
-  Future<List<Measure>> getMeasuresFromDate(DateTime searchDate) {
-    return (select(measures)
-          ..where(
-            (row) {
-              final date = row.timestamp;
-              return date.year.equals(searchDate.year) &
-                  date.month.equals(searchDate.month) &
-                  date.day.equals(searchDate.day);
-            },
-          )).get();
-  }
+  // Future<List<Measure>> getMeasuresFromDate(DateTime searchDate) {
+  //   return (select(measures)
+  //         ..where(
+  //           (row) {
+  //             final date = row.timestamp;
+  //             return date.year.equals(searchDate.year) &
+  //                 date.month.equals(searchDate.month) &
+  //                 date.day.equals(searchDate.day);
+  //           },
+  //         )).get();
+  // }
 }
 // Moor works by source gen. This file will all the generated code.

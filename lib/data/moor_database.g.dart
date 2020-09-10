@@ -6,7 +6,7 @@ part of 'moor_database.dart';
 // MoorGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
+// ignore_for_file: unnecessary_brace_in_string_interps
 class Measure extends DataClass implements Insertable<Measure> {
   final int id;
   final DateTime timestamp;
@@ -47,8 +47,7 @@ class Measure extends DataClass implements Insertable<Measure> {
     );
   }
   factory Measure.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer serializer = const ValueSerializer.defaults()}) {
     return Measure(
       id: serializer.fromJson<int>(json['id']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
@@ -60,9 +59,9 @@ class Measure extends DataClass implements Insertable<Measure> {
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
+  Map<String, dynamic> toJson(
+      {ValueSerializer serializer = const ValueSerializer.defaults()}) {
+    return {
       'id': serializer.toJson<int>(id),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'temperature': serializer.toJson<double>(temperature),
@@ -74,7 +73,7 @@ class Measure extends DataClass implements Insertable<Measure> {
   }
 
   @override
-  MeasuresCompanion createCompanion(bool nullToAbsent) {
+  T createCompanion<T extends UpdateCompanion<Measure>>(bool nullToAbsent) {
     return MeasuresCompanion(
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       timestamp: timestamp == null && nullToAbsent
@@ -95,7 +94,7 @@ class Measure extends DataClass implements Insertable<Measure> {
       sentToFirebase: sentToFirebase == null && nullToAbsent
           ? const Value.absent()
           : Value(sentToFirebase),
-    );
+    ) as T;
   }
 
   Measure copyWith(
@@ -143,16 +142,16 @@ class Measure extends DataClass implements Insertable<Measure> {
                       $mrjc(boxTemperature.hashCode,
                           sentToFirebase.hashCode)))))));
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(other) =>
       identical(this, other) ||
       (other is Measure &&
-          other.id == this.id &&
-          other.timestamp == this.timestamp &&
-          other.temperature == this.temperature &&
-          other.humidity == this.humidity &&
-          other.pressure == this.pressure &&
-          other.boxTemperature == this.boxTemperature &&
-          other.sentToFirebase == this.sentToFirebase);
+          other.id == id &&
+          other.timestamp == timestamp &&
+          other.temperature == temperature &&
+          other.humidity == humidity &&
+          other.pressure == pressure &&
+          other.boxTemperature == boxTemperature &&
+          other.sentToFirebase == sentToFirebase);
 }
 
 class MeasuresCompanion extends UpdateCompanion<Measure> {
@@ -164,15 +163,6 @@ class MeasuresCompanion extends UpdateCompanion<Measure> {
   final Value<double> boxTemperature;
   final Value<bool> sentToFirebase;
   const MeasuresCompanion({
-    this.id = const Value.absent(),
-    this.timestamp = const Value.absent(),
-    this.temperature = const Value.absent(),
-    this.humidity = const Value.absent(),
-    this.pressure = const Value.absent(),
-    this.boxTemperature = const Value.absent(),
-    this.sentToFirebase = const Value.absent(),
-  });
-  MeasuresCompanion.insert({
     this.id = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.temperature = const Value.absent(),
@@ -311,34 +301,48 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
     final context = VerificationContext();
     if (d.id.present) {
       context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
+    } else if (id.isRequired && isInserting) {
+      context.missing(_idMeta);
     }
     if (d.timestamp.present) {
       context.handle(_timestampMeta,
           timestamp.isAcceptableValue(d.timestamp.value, _timestampMeta));
+    } else if (timestamp.isRequired && isInserting) {
+      context.missing(_timestampMeta);
     }
     if (d.temperature.present) {
       context.handle(_temperatureMeta,
           temperature.isAcceptableValue(d.temperature.value, _temperatureMeta));
+    } else if (temperature.isRequired && isInserting) {
+      context.missing(_temperatureMeta);
     }
     if (d.humidity.present) {
       context.handle(_humidityMeta,
           humidity.isAcceptableValue(d.humidity.value, _humidityMeta));
+    } else if (humidity.isRequired && isInserting) {
+      context.missing(_humidityMeta);
     }
     if (d.pressure.present) {
       context.handle(_pressureMeta,
           pressure.isAcceptableValue(d.pressure.value, _pressureMeta));
+    } else if (pressure.isRequired && isInserting) {
+      context.missing(_pressureMeta);
     }
     if (d.boxTemperature.present) {
       context.handle(
           _boxTemperatureMeta,
           boxTemperature.isAcceptableValue(
               d.boxTemperature.value, _boxTemperatureMeta));
+    } else if (boxTemperature.isRequired && isInserting) {
+      context.missing(_boxTemperatureMeta);
     }
     if (d.sentToFirebase.present) {
       context.handle(
           _sentToFirebaseMeta,
           sentToFirebase.isAcceptableValue(
               d.sentToFirebase.value, _sentToFirebaseMeta));
+    } else if (sentToFirebase.isRequired && isInserting) {
+      context.missing(_sentToFirebaseMeta);
     }
     return context;
   }
@@ -387,11 +391,9 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
 }
 
 abstract class _$AppDatabase extends GeneratedDatabase {
-  _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
+  _$AppDatabase(QueryExecutor e) : super(const SqlTypeSystem.withDefaults(), e);
   $MeasuresTable _measures;
   $MeasuresTable get measures => _measures ??= $MeasuresTable(this);
   @override
-  Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
-  @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [measures];
+  List<TableInfo> get allTables => [measures];
 }

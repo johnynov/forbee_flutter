@@ -40,20 +40,26 @@ Future<List<Measure>> fetchAllMeasures() async {
   if (response.statusCode == 200) {
     List<Measure> measuresList;
     List measuresFromBody = response.body.split('\r\n');
-    print(response.body.split('\r\n'));
+    print(measuresFromBody);
     for (var item in measuresFromBody) {
-      List<String> values = item.split(';');
-      final measure = Measure(
-          id: null,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(
-              (int.parse(values[0]) - 3600 * 2) * 1000),
-          temperature: double.parse(values[1]),
-          humidity: double.parse(values[2]),
-          pressure: double.parse(values[3]),
-          boxTemperature: double.parse(values[4]),
-          sentToFirebase: null);
-      print(Measure);
-      measuresList.add(measure);
+      try {
+        List<String> values = item.split(';');
+        if (values.length > 2) {
+          final measure = Measure(
+              id: null,
+              timestamp: DateTime.fromMillisecondsSinceEpoch(
+                  (int.parse(values[0]) - 3600 * 2) * 1000),
+              temperature: double.parse(values[1]),
+              humidity: double.parse(values[2]),
+              pressure: double.parse(values[3]),
+              boxTemperature: double.parse(values[4]),
+              sentToFirebase: null);
+          print(Measure);
+          measuresList.add(measure);
+        }
+      } catch (e) {
+        continue;
+      }
     }
     return measuresList;
   } else {
