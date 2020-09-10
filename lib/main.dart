@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:forbee/data/moor_database.dart';
-import 'package:forbee/test.dart';
+import 'package:forbee/ui/home_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import './chart.dart';
-import './main_drawer.dart';
-import './myMeasures.dart';
+import 'ui/Hive.dart';
+import 'ui/main_drawer.dart';
+import 'ui/Measures.dart';
 
 void main() => runApp(MyApp());
 
@@ -13,15 +13,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Provider(
+      builder: (_) => AppDatabase(),
       child: MaterialApp(
         title: 'Forbee',
         debugShowCheckedModeBanner: false,
-        home: ChartScreen(),
+        home: HomePage(),
         routes: {
-          '/home': (_) => MyHomePage(),
-          '/charts': (_) => ChartScreen(),
-          '/wifitest': (_) => myTest(),
-          // '/myMeasures': (_) => myMeasures()
+          '/hive': (_) => HiveScreen(),
+          '/myMeasures': (_) => MeasuresScreen(),
+          '/databaseTest' : (_) => HomePage(),
         },
       ),
       create: (BuildContext context) {},

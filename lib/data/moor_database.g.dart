@@ -9,7 +9,7 @@ part of 'moor_database.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class Measure extends DataClass implements Insertable<Measure> {
   final int id;
-  final int timestamp;
+  final DateTime timestamp;
   final double temperature;
   final double humidity;
   final double pressure;
@@ -27,12 +27,13 @@ class Measure extends DataClass implements Insertable<Measure> {
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
+    final dateTimeType = db.typeSystem.forDartType<DateTime>();
     final doubleType = db.typeSystem.forDartType<double>();
     final boolType = db.typeSystem.forDartType<bool>();
     return Measure(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      timestamp:
-          intType.mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
+      timestamp: dateTimeType
+          .mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
       temperature: doubleType
           .mapFromDatabaseResponse(data['${effectivePrefix}temperature']),
       humidity: doubleType
@@ -50,7 +51,7 @@ class Measure extends DataClass implements Insertable<Measure> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return Measure(
       id: serializer.fromJson<int>(json['id']),
-      timestamp: serializer.fromJson<int>(json['timestamp']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       temperature: serializer.fromJson<double>(json['temperature']),
       humidity: serializer.fromJson<double>(json['humidity']),
       pressure: serializer.fromJson<double>(json['pressure']),
@@ -63,7 +64,7 @@ class Measure extends DataClass implements Insertable<Measure> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'timestamp': serializer.toJson<int>(timestamp),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
       'temperature': serializer.toJson<double>(temperature),
       'humidity': serializer.toJson<double>(humidity),
       'pressure': serializer.toJson<double>(pressure),
@@ -99,7 +100,7 @@ class Measure extends DataClass implements Insertable<Measure> {
 
   Measure copyWith(
           {int id,
-          int timestamp,
+          DateTime timestamp,
           double temperature,
           double humidity,
           double pressure,
@@ -156,7 +157,7 @@ class Measure extends DataClass implements Insertable<Measure> {
 
 class MeasuresCompanion extends UpdateCompanion<Measure> {
   final Value<int> id;
-  final Value<int> timestamp;
+  final Value<DateTime> timestamp;
   final Value<double> temperature;
   final Value<double> humidity;
   final Value<double> pressure;
@@ -182,7 +183,7 @@ class MeasuresCompanion extends UpdateCompanion<Measure> {
   });
   MeasuresCompanion copyWith(
       {Value<int> id,
-      Value<int> timestamp,
+      Value<DateTime> timestamp,
       Value<double> temperature,
       Value<double> humidity,
       Value<double> pressure,
@@ -214,11 +215,11 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   }
 
   final VerificationMeta _timestampMeta = const VerificationMeta('timestamp');
-  GeneratedIntColumn _timestamp;
+  GeneratedDateTimeColumn _timestamp;
   @override
-  GeneratedIntColumn get timestamp => _timestamp ??= _constructTimestamp();
-  GeneratedIntColumn _constructTimestamp() {
-    return GeneratedIntColumn(
+  GeneratedDateTimeColumn get timestamp => _timestamp ??= _constructTimestamp();
+  GeneratedDateTimeColumn _constructTimestamp() {
+    return GeneratedDateTimeColumn(
       'timestamp',
       $tableName,
       true,
@@ -343,7 +344,7 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {timestamp};
   @override
   Measure map(Map<String, dynamic> data, {String tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
@@ -357,7 +358,7 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
       map['id'] = Variable<int, IntType>(d.id.value);
     }
     if (d.timestamp.present) {
-      map['timestamp'] = Variable<int, IntType>(d.timestamp.value);
+      map['timestamp'] = Variable<DateTime, DateTimeType>(d.timestamp.value);
     }
     if (d.temperature.present) {
       map['temperature'] = Variable<double, RealType>(d.temperature.value);
