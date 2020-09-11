@@ -11,11 +11,9 @@ Future<Measure> fetchMeasures() async {
   var getMeasuresUrl = hive_url + "/measures/now";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
-    // print(response.statusCode);
-    // print(response.body);
     List<String> values = response.body.split(';');
     try {
-      final measure = Measure(
+      var measure = Measure(
           id: null,
           timestamp: DateTime.fromMillisecondsSinceEpoch(
               (int.parse(values[0]) - 3600 * 2) * 1000),
@@ -38,33 +36,25 @@ Future<List<Measure>> fetchAllMeasures() async {
   var getMeasuresUrl = hive_url + "/measures/all";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
-    List<Measure> measuresList;
+    List<Measure> measuresList = [];
     List measuresFromBody = response.body.split('\r\n');
+    measuresFromBody.removeLast();
     print(measuresFromBody);
     for (var item in measuresFromBody) {
-      try {
-        List<String> values = item.split(';');
-        if (values.length > 2) {
-          final measure = Measure(
-              id: null,
-              timestamp: DateTime.fromMillisecondsSinceEpoch(
-                  (int.parse(values[0]) - 3600 * 2) * 1000),
-              temperature: double.parse(values[1]),
-              humidity: double.parse(values[2]),
-              pressure: double.parse(values[3]),
-              boxTemperature: double.parse(values[4]),
-              sentToFirebase: null);
-          print(Measure);
-          measuresList.add(measure);
-        }
-      } catch (e) {
-        continue;
-      }
+      List<String> values = item.split(';');
+      var measure = Measure(
+          id: null,
+          timestamp: DateTime.fromMillisecondsSinceEpoch(
+              (int.parse(values[0]) - 3600 * 2) * 1000),
+          temperature: double.parse(values[1]),
+          humidity: double.parse(values[2]),
+          pressure: double.parse(values[3]),
+          boxTemperature: double.parse(values[4]),
+          sentToFirebase: null);
+      print(measure);
+      measuresList.add(measure);
     }
     return measuresList;
-  } else {
-    throw Exception('Failed to make get request');
-    return null;
   }
 }
 

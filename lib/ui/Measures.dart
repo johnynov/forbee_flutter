@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/fa_icon.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'main_drawer.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../data/moor_database.dart';
+
 
 class MeasuresScreen extends StatefulWidget {
   @override
@@ -15,7 +20,27 @@ class _MeasuresScreenState extends State<MeasuresScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Moje pomiary'),
+          actions: <Widget>[
+            IconButton(
+              icon: const FaIcon(FontAwesomeIcons.calendarAlt),
+              tooltip: 'Wybierz dzień',
+              iconSize: 20,
+              onPressed: () {},
+            ),
+            GestureDetector(
+              child: IconButton(
+                icon: const FaIcon(FontAwesomeIcons.trash),
+                tooltip: 'Usuń wszystkie pomiary',
+                iconSize: 20,
+                onPressed: () {
+                  final database = Provider.of<AppDatabase>(context);
+                  database.deleteAllMeasures();
+                },
+              ),
+            ),
+          ],
         ),
+        drawer: MainDrawer(),
         body: Column(
           children: <Widget>[
             Expanded(child: _buildMeasuresList(context)),
@@ -64,3 +89,10 @@ class _MeasuresScreenState extends State<MeasuresScreen> {
     );
   }
 }
+
+// String formatTileTimestamp(DateTime timestemp) {
+//   var formatter = new DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", 'en');
+
+
+//   return dateformatted;
+// }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/fa_icon.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:forbee/ui/Measures.dart';
 import 'dart:async';
 import 'main_drawer.dart';
 import 'package:connectivity/connectivity.dart';
@@ -250,8 +251,8 @@ class _HiveScreenState extends State<HiveScreen> {
                   Builder(
                     // szybki pomiar
                     builder: (BuildContext context) {
-                          final database = Provider.of<AppDatabase>(context);
-                          return ButtonTheme(
+                      final database = Provider.of<AppDatabase>(context);
+                      return ButtonTheme(
                           minWidth: MediaQuery.of(context).size.width - 120,
                           height: 40.0,
                           shape: RoundedRectangleBorder(
@@ -259,15 +260,31 @@ class _HiveScreenState extends State<HiveScreen> {
                           child: (RaisedButton(
                             onPressed: () async {
                               Measure measure = await fetchMeasures();
+                              setState(() {
+                                _temperature = measure.temperature.toString();
+                                _humidity = measure.humidity.toString();
+                                _pressure = measure.pressure.toString();
+                                _time = measure.timestamp.toString();
+                              });
                               print(measure.toString());
                               //Save to database
                               database.insertMeasure(measure);
                               final snackBar = SnackBar(
                                   content: Row(children: [
-                                    Icon(Icons.thumb_up),
+                                    Icon(Icons.check),
                                     SizedBox(width: 20),
                                     Expanded(child: Text("Pomiar zrobiony"))
                                   ]),
+                                  action: SnackBarAction(
+                                      label: 'Pokaż',
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  MeasuresScreen()),
+                                        );
+                                      }),
                                   duration: const Duration(seconds: 1));
                               Scaffold.of(context).showSnackBar(snackBar);
                             },
@@ -289,13 +306,35 @@ class _HiveScreenState extends State<HiveScreen> {
                           onPressed: () async {
                             List<Measure> allMeasures =
                                 await fetchAllMeasures();
+                            var numOfMeasuresAdded = 0;
                             for (Measure item in allMeasures) {
-                              final list =
-                              await database.checkMeasureInDatabase(item);
-                              if (list.length == 0) {
-                                database.insertMeasure(item);
-                              }
+                              // final list =
+                              //     await database.checkMeasureInDatabase(item);
+                              // if (list.length == 0) {
+                                print(database.insertMeasure(item));
+                                numOfMeasuresAdded += 1;
+                              // }
                             }
+                            final snackBar = SnackBar(
+                                content: Row(children: [
+                                  FaIcon(FontAwesomeIcons.sortAmountDownAlt),
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                      child: Text("Pomiary zaciągnięte +" +
+                                          numOfMeasuresAdded.toString()))
+                                ]),
+                                action: SnackBarAction(
+                                    label: 'Pokaż',
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                MeasuresScreen()),
+                                      );
+                                    }),
+                                duration: const Duration(seconds: 1));
+                            Scaffold.of(context).showSnackBar(snackBar);
                           },
                           child: const Text('Pobierz wszystkie pomiary',
                               style: TextStyle(fontSize: 14)),
@@ -358,10 +397,6 @@ class _HiveScreenState extends State<HiveScreen> {
                                         SizedBox(width: 20),
                                         Expanded(child: Text(reponse)),
                                       ]),
-                                      action: SnackBarAction(
-                                          label: 'OK', onPressed: () {}),
-                                      duration: const Duration(seconds: 1),
-                                      // backgroundColor: Colors.black45,
                                     );
                                     Scaffold.of(context).showSnackBar(snackBar);
                                   },
@@ -392,11 +427,10 @@ class _HiveScreenState extends State<HiveScreen> {
                                         Icon(Icons.av_timer,
                                             color: Colors.white),
                                         SizedBox(width: 20),
-                                        Expanded(child: Text(reponse))
+                                        Expanded(
+                                            child:
+                                                Text('Zegar zsynchronizowany'))
                                       ]),
-                                      action: SnackBarAction(
-                                          label: 'OK', onPressed: () {}),
-                                      duration: const Duration(seconds: 1),
                                     );
                                     Scaffold.of(context).showSnackBar(snackBar);
                                   },
@@ -472,7 +506,6 @@ class _HiveScreenState extends State<HiveScreen> {
           }
         }
 
-      
         setState(() {
           if (macAddress == 'B4:E6:2D:F6:C9:8D') {
             _connectionStatus = Colors.greenAccent[400];
@@ -486,10 +519,10 @@ class _HiveScreenState extends State<HiveScreen> {
         setState(() => _connectionStatus = Colors.tealAccent);
         break;
       case ConnectivityResult.none:
-        setState(() => _connectionStatus = Colors.grey[30]);
+        setState(() => _connectionStatus = Colors.grey[400]);
         break;
       default:
-        setState(() => _connectionStatus = Colors.grey[30]);
+        setState(() => _connectionStatus = Colors.grey[400]);
         break;
     }
   }

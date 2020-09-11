@@ -209,11 +209,8 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   @override
   GeneratedDateTimeColumn get timestamp => _timestamp ??= _constructTimestamp();
   GeneratedDateTimeColumn _constructTimestamp() {
-    return GeneratedDateTimeColumn(
-      'timestamp',
-      $tableName,
-      true,
-    );
+    return GeneratedDateTimeColumn('timestamp', $tableName, true,
+        $customConstraints: 'UNIQUE');
   }
 
   final VerificationMeta _temperatureMeta =
