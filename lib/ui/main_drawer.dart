@@ -1,8 +1,10 @@
-
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/fa_icon.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:forbee/main.dart';
-import 'package:forbee/ui/Measures.dart';
-import 'package:forbee/ui/home_page.dart';
+import 'package:forbee/ui/measures.dart';
+import 'package:forbee/ui/charts.dart';
+import 'package:forbee/ui/userAccount.dart';
 import '../main.dart';
 import 'Hive.dart';
 
@@ -15,7 +17,7 @@ class MainDrawer extends StatelessWidget {
     var scr_h = MediaQuery.of(context).size.height;
     var scr_w = MediaQuery.of(context).size.width;
     return Container(
-      width: MediaQuery.of(context).size.width * 0.7,
+      width: MediaQuery.of(context).size.width * 0.65,
       child: Drawer(
           child: SafeArea(
         child: ListView(
@@ -24,28 +26,37 @@ class MainDrawer extends StatelessWidget {
             Row(children: <Widget>[
               Column(
                 children: <Widget>[
-                  Container(
-                    width: 90,
-                    height: 90,
-                    margin: EdgeInsets.only(left: 30, top: 20, bottom: 15),
-                    decoration: BoxDecoration(
-                        color: borderColor,
-                        image: const DecorationImage(
-                          image: AssetImage('assets/profilowe.jpg'),
-                          fit: BoxFit.cover,
-                        ),
-                        border: Border.all(
+                  GestureDetector(
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      margin: EdgeInsets.only(left: 30, top: 20, bottom: 15),
+                      decoration: BoxDecoration(
                           color: borderColor,
-                          width: 5,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
+                          image: const DecorationImage(
+                            image: AssetImage('assets/profilowe.jpg'),
+                            fit: BoxFit.cover,
+                          ),
+                          border: Border.all(
                             color: borderColor,
-                            blurRadius: 4,
-                            spreadRadius: 2,
-                          )
-                        ]),
+                            width: 5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: borderColor,
+                              blurRadius: 4,
+                              spreadRadius: 2,
+                            )
+                          ]),
+                    ),
+                    onLongPress: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UserAccount()),
+                      );
+                    },
                   ),
                   Container(
                       child: Text('Rysio, Pszczelarz',
@@ -81,17 +92,6 @@ class MainDrawer extends StatelessWidget {
               // ),
             ]),
             ListTile(
-              leading: Image.asset('assets/line-chart.png',
-                  scale: 1.0, height: 30.0, width: 30.0),
-              title: Text('Moje Pomiary'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MeasuresScreen()),
-                );
-              },
-            ),
-            ListTile(
               leading: Image.asset('assets/beehive.png',
                   scale: 1.0, height: 40.0, width: 40.0),
               title: Text('Moje Ule'),
@@ -112,9 +112,22 @@ class MainDrawer extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: FaIcon(
+                FontAwesomeIcons.list,
+                size: 28,
+              ),
+              title: Text('Moje Pomiary'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MeasuresScreen()),
+                );
+              },
+            ),
+            ListTile(
               leading: Image.asset('assets/line-chart.png',
                   scale: 1.0, height: 30.0, width: 30.0),
-              title: Text('Test bazy danych'),
+              title: Text('Moje Wykresy'),
               onTap: () {
                 Navigator.push(
                   context,

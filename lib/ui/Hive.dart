@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/fa_icon.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:forbee/ui/Measures.dart';
+import 'package:forbee/ui/measures.dart';
 import 'dart:async';
 import 'main_drawer.dart';
 import 'package:connectivity/connectivity.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import '../widgets/httpMethods.dart';
-import '../main.dart';
 // import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:provider/provider.dart';
@@ -30,7 +28,7 @@ class _HiveScreenState extends State<HiveScreen> {
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   String _time = 'Czas pomiaru';
-  String _temperature = '', _humidity = '', _pressure = '';
+  String _temperature = '', _humidity = '', _pressure = '', _tempModule = '';
   Color color = Colors.redAccent[400];
 
   //TODO: implement on ESP32 decimal precision
@@ -46,6 +44,7 @@ class _HiveScreenState extends State<HiveScreen> {
       _humidity = measuretoJson['humidity'].toString();
       _pressure = measuretoJson['pressure'].toString();
       _time = measuretoJson['timestamp'].toString();
+      _tempModule = measuretoJson['boxTemperature'].toString();
     });
   }
 
@@ -62,9 +61,6 @@ class _HiveScreenState extends State<HiveScreen> {
     _connectivitySubscription.cancel();
     super.dispose();
   }
-
-  List<bool> _selections1 = List.generate(3, (_) => false);
-  List<bool> _selections2 = List.generate(4, (_) => false);
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +93,7 @@ class _HiveScreenState extends State<HiveScreen> {
                         style: TextStyle(color: Colors.black, fontSize: 15)),
                   ),
                   Container(
-                      margin: EdgeInsets.only(top: 20),
+                      margin: EdgeInsets.only(top: 20, bottom: 30 ),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -129,137 +125,131 @@ class _HiveScreenState extends State<HiveScreen> {
                                         TextStyle(color: Colors.indigo[800])),
                               ],
                             ),
-                            // Column(
-                            //   children: [
-                            //     FaIcon(FontAwesomeIcons.weightHanging,
-                            //         color: Colors.grey[800]),
-                            //     Text('0 kg', style: textStyle),
-                            //     Text('Waga',
-                            //         style: TextStyle(color: Colors.grey[800])),
-                            //   ],
-                            // ),
                           ])),
-                  Container(
-                      margin: EdgeInsets.only(top: 30, right: 30, left: 30),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(children: [
-                              Icon(Icons.timer,
-                                  color: Colors.yellow[700], size: 30),
-                              Text('czuwanie',
-                                  style: TextStyle(fontSize: 14, height: 1)),
-                            ]),
-                            Column(
-                              children: [
-                                ToggleButtons(
-                                    children: [
-                                      Text('0.5',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold)),
-                                      Text('1',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold)),
-                                      Text('2',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold))
-                                    ],
-                                    color: Colors.greenAccent[700],
-                                    isSelected: _selections1,
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderWidth: 2,
-                                    borderColor: Colors.greenAccent[700],
-                                    selectedBorderColor:
-                                        Colors.greenAccent[700],
-                                    fillColor: Colors.greenAccent[700],
-                                    selectedColor: Colors.white,
-                                    onPressed: (int index) {
-                                      setState(() {
-                                        for (int indexBtn = 0;
-                                            indexBtn < _selections1.length;
-                                            indexBtn++) {
-                                          if (indexBtn == index) {
-                                            _selections1[indexBtn] = true;
-                                          } else {
-                                            _selections1[indexBtn] = false;
-                                          }
-                                        }
-                                      });
-                                    })
-                              ],
-                            ),
-                          ])),
-                  Container(
-                    margin: EdgeInsets.only(
-                        top: 10, right: 30, left: 30, bottom: 10),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(children: [
-                            FaIcon(FontAwesomeIcons.moon,
-                                color: Colors.yellow[700], size: 27),
-                            Text('uśpienie',
-                                style: TextStyle(fontSize: 14, height: 1)),
-                          ]),
-                          Column(children: [
-                            ToggleButtons(
-                                children: [
-                                  Text('15',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold)),
-                                  Text('30',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold)),
-                                  Text('60',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold)),
-                                  Text('120',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold))
-                                ],
-                                color: Colors.green,
-                                isSelected: _selections2,
-                                borderRadius: BorderRadius.circular(10),
-                                borderWidth: 2,
-                                borderColor: Colors.greenAccent[700],
-                                selectedBorderColor: Colors.greenAccent[700],
-                                fillColor: Colors.greenAccent[700],
-                                selectedColor: Colors.white,
-                                onPressed: (int index) {
-                                  setState(() {
-                                    for (int indexBtn = 0;
-                                        indexBtn < _selections2.length;
-                                        indexBtn++) {
-                                      if (indexBtn == index) {
-                                        _selections2[indexBtn] = true;
-                                      } else {
-                                        _selections2[indexBtn] = false;
-                                      }
-                                    }
-                                  });
-                                })
-                          ]),
-                        ]),
-                  ),
+                  // Container(
+                  //     margin: EdgeInsets.only(top: 30, right: 30, left: 30),
+                  //     child: Row(
+                  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //         children: [
+                  //           Column(children: [
+                  //             Icon(Icons.timer,
+                  //                 color: Colors.yellow[700], size: 30),
+                  //             Text('czuwanie',
+                  //                 style: TextStyle(fontSize: 14, height: 1)),
+                  //           ]),
+                  //           Column(
+                  //             children: [
+                  //               ToggleButtons(
+                  //                   children: [
+                  //                     Text('0.5',
+                  //                         style: TextStyle(
+                  //                             fontSize: 14,
+                  //                             fontWeight: FontWeight.bold)),
+                  //                     Text('1',
+                  //                         style: TextStyle(
+                  //                             fontSize: 14,
+                  //                             fontWeight: FontWeight.bold)),
+                  //                     Text('2',
+                  //                         style: TextStyle(
+                  //                             fontSize: 14,
+                  //                             fontWeight: FontWeight.bold))
+                  //                   ],
+                  //                   color: Colors.greenAccent[700],
+                  //                   isSelected: _selections1,
+                  //                   borderRadius: BorderRadius.circular(10),
+                  //                   borderWidth: 2,
+                  //                   borderColor: Colors.greenAccent[700],
+                  //                   selectedBorderColor:
+                  //                       Colors.greenAccent[700],
+                  //                   fillColor: Colors.greenAccent[700],
+                  //                   selectedColor: Colors.white,
+                  //                   onPressed: (int index) {
+                  //                     setState(() {
+                  //                       for (int indexBtn = 0;
+                  //                           indexBtn < _selections1.length;
+                  //                           indexBtn++) {
+                  //                         if (indexBtn == index) {
+                  //                           _selections1[indexBtn] = true;
+                  //                         } else {
+                  //                           _selections1[indexBtn] = false;
+                  //                         }
+                  //                       }
+                  //                     });
+                  //                   })
+                  //             ],
+                  //           ),
+                  //         ])),
+                  // Container(
+                  //   margin: EdgeInsets.only(
+                  //       top: 10, right: 30, left: 30, bottom: 10),
+                  //   child: Row(
+                  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //       children: [
+                  //         Column(children: [
+                  //           FaIcon(FontAwesomeIcons.moon,
+                  //               color: Colors.yellow[700], size: 27),
+                  //           Text('uśpienie',
+                  //               style: TextStyle(fontSize: 14, height: 1)),
+                  //         ]),
+                  //         Column(children: [
+                  //           ToggleButtons(
+                  //               children: [
+                  //                 Text('15',
+                  //                     style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontWeight: FontWeight.bold)),
+                  //                 Text('30',
+                  //                     style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontWeight: FontWeight.bold)),
+                  //                 Text('60',
+                  //                     style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontWeight: FontWeight.bold)),
+                  //                 Text('120',
+                  //                     style: TextStyle(
+                  //                         fontSize: 14,
+                  //                         fontWeight: FontWeight.bold))
+                  //               ],
+                  //               color: Colors.green,
+                  //               isSelected: _selections2,
+                  //               borderRadius: BorderRadius.circular(10),
+                  //               borderWidth: 2,
+                  //               borderColor: Colors.greenAccent[700],
+                  //               selectedBorderColor: Colors.greenAccent[700],
+                  //               fillColor: Colors.greenAccent[700],
+                  //               selectedColor: Colors.white,
+                  //               onPressed: (int index) {
+                  //                 setState(() {
+                  //                   for (int indexBtn = 0;
+                  //                       indexBtn < _selections2.length;
+                  //                       indexBtn++) {
+                  //                     if (indexBtn == index) {
+                  //                       _selections2[indexBtn] = true;
+                  //                     } else {
+                  //                       _selections2[indexBtn] = false;
+                  //                     }
+                  //                   }
+                  //                 });
+                  //               })
+                  //         ]),
+                  //       ]),
+                  // ),
                   Builder(
                     // szybki pomiar
                     builder: (BuildContext context) {
                       final database = Provider.of<AppDatabase>(context);
                       return ButtonTheme(
-                          minWidth: MediaQuery.of(context).size.width - 120,
+                          minWidth: MediaQuery.of(context).size.width - 60,
                           height: 40.0,
                           shape: RoundedRectangleBorder(
                               borderRadius: new BorderRadius.circular(13.0)),
                           child: (RaisedButton(
                             onPressed: () async {
                               Measure measure = await fetchMeasures();
+                              List<Measure> todaysMeasures = await database.getMeasuresFromDate(DateTime.now());
+                              print('TODAYS MEASURES:'); 
+                              print(todaysMeasures);
                               setState(() {
                                 _temperature = measure.temperature.toString();
                                 _humidity = measure.humidity.toString();

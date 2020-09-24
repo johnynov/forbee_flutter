@@ -4,11 +4,11 @@ import 'package:connectivity/connectivity.dart';
 import '../data/moor_database.dart';
 import 'package:http/http.dart' as http;
 
-String hive_url = "http://192.168.4.1";
+String hiveUrl = "http://192.168.4.1";
 
 Future<Measure> fetchMeasures() async {
   print("Making instant measure...");
-  var getMeasuresUrl = hive_url + "/measures/now";
+  var getMeasuresUrl = hiveUrl + "/measures/now";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
     List<String> values = response.body.split(';');
@@ -33,7 +33,7 @@ Future<Measure> fetchMeasures() async {
 
 Future<List<Measure>> fetchAllMeasures() async {
   print("Getting all measures..");
-  var getMeasuresUrl = hive_url + "/measures/all";
+  var getMeasuresUrl = hiveUrl + "/measures/all";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
     List<Measure> measuresList = [];
@@ -60,7 +60,7 @@ Future<List<Measure>> fetchAllMeasures() async {
 
 Future<String> setToSleep() async {
   print("Making GET http request..");
-  var getMeasuresUrl = hive_url + "/sleep";
+  var getMeasuresUrl = hiveUrl + "/sleep";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
     print('Setting to sleep');
@@ -73,7 +73,7 @@ Future<String> setToSleep() async {
 
 Future<String> getMacAddress() async {
   print("Making GET mac address..");
-  var getMacaddress = hive_url + "/mac";
+  var getMacaddress = hiveUrl + "/mac";
   final response = await http.get(getMacaddress);
   if (response.statusCode == 200) {
     var mac = Utf8Codec().decode(response.bodyBytes).toString();
@@ -87,7 +87,7 @@ Future<String> getMacAddress() async {
 Future<String> deleteMeasuresFile() async {
   print("Making GET http request..");
 
-  var getMeasuresUrl = hive_url + "/measures/delete";
+  var getMeasuresUrl = hiveUrl + "/measures/delete";
   final response = await http.get(getMeasuresUrl);
   if (response.statusCode == 200) {
     return 'Pomiary pogrzebane żywcem.';
@@ -106,7 +106,7 @@ String mapParameters(Map<dynamic, dynamic> map) {
 
 Future<String> syncTime() async {
   print("Making POST http request..");
-  var url = hive_url + "/clock/set";
+  var url = hiveUrl + "/clock/set";
   var ms = (new DateTime.now()).millisecondsSinceEpoch;
   String time = (ms / 1000 + 3600 * 2).round().toString();
   String u = url + "?time=" + time;
