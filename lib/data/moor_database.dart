@@ -3,7 +3,8 @@ part 'moor_database.g.dart';
 
 class Measures extends Table {
   IntColumn get id => integer().autoIncrement()();
-  DateTimeColumn get timestamp => dateTime().nullable().customConstraint('UNIQUE')();
+  DateTimeColumn get timestamp =>
+      dateTime().nullable().customConstraint('UNIQUE')();
   RealColumn get temperature => real().nullable()();
   RealColumn get humidity => real().nullable()();
   RealColumn get pressure => real().nullable()();
@@ -14,7 +15,14 @@ class Measures extends Table {
   Set<Column> get primaryKey => {timestamp};
 }
 
-@UseMoor(tables: [Measures])
+class AppUsers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().nullable()();
+  TextColumn get surname => text().nullable()();
+  TextColumn get photoPath => text().nullable()();
+}
+
+@UseMoor(tables: [Measures, AppUsers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
       // Specify the location of the database file
@@ -27,19 +35,24 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
+  //Measures Database methods
   Future<List<Measure>> getAllMeasures() => select(measures).get();
   Stream<List<Measure>> watchAllMeasures() {
     return (select(measures)
-      ..orderBy([(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)])).watch();
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+          ]))
+        .watch();
   }
-  Future insertMeasure(Measure measure) => into(measures).insert(measure, orReplace: false);
+  Future insertMeasure(Measure measure) =>
+      into(measures).insert(measure, orReplace: false);
   Future updateMeasure(Measure measure) => update(measures).replace(measure);
   Future deleteMeasure(Measure measure) => delete(measures).delete(measure);
   Future<List<Measure>> checkMeasureInDatabase(Measure measure) =>
       (select(measures)..where((m) => m.timestamp.equals(measure.timestamp)))
           .get();
   Future deleteAllMeasures() => delete(measures).go();
-  
+
   Future<List<Measure>> getMeasuresFromDate(DateTime searchDate) {
     return (select(measures)
           ..where(
@@ -49,15 +62,27 @@ class AppDatabase extends _$AppDatabase {
                   date.month.equals(searchDate.month) &
                   date.day.equals(searchDate.day);
             },
-          )..orderBy([(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc)])).get();
+          )
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc)
+          ]))
+        .get();
   }
+
   Future<List<DateTime>> getDistinctDays() {
     final year = measures.timestamp.year;
     final month = measures.timestamp.month;
     final day = measures.timestamp.day;
-    final query = selectOnly(measures, distinct: true)..addColumns([year, month, day]);
-    return query.map((row) => DateTime.utc(row.read(year),row.read(month),row.read(day))).get();  
-    }
+    final query = selectOnly(measures, distinct: true)
+      ..addColumns([year, month, day]);
+    return query
+        .map((row) =>
+            DateTime.utc(row.read(year), row.read(month), row.read(day))).get();
+  }
+  //Users Database Methods
+  Future<List<AppUser>> getAllUsers() => select(appUsers).get();
+  Future insertAppUser(AppUser appuser) => into(appUsers).insert(appuser, orReplace: false);
+  Future updateAppUser(AppUser user) => update(appUsers).replace(user);
 }
 
 // Moor works by source gen. This file will all the generated code.

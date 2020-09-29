@@ -9,12 +9,12 @@ import 'package:font_awesome_flutter/fa_icon.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_rounded_date_picker/rounded_picker.dart';
 
-class HomePage extends StatefulWidget {
+class ChartScreen extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _ChartScreenState createState() => _ChartScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _ChartScreenState extends State<ChartScreen> {
   List<Measure> _series1;
   DateTime _dateTime;
 
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         animate: false,
                         primaryMeasureAxis: new charts.NumericAxisSpec(
-                            viewport: new charts.NumericExtents(23,27)),
+                            viewport: new charts.NumericExtents(20,27)),
                         behaviors: [
                           // Add title.
                           charts.ChartTitle('Temperatura w ulu'),
@@ -244,15 +244,5 @@ class _HomePageState extends State<HomePage> {
       days.add(startDate.add(Duration(days: i)));
     }
     return days;
-  }
-
-  num _returnMinMax(series, parameter, String x) {
-    List<int> list;
-    series.forEach((measure) => list.add(measure.parameter));
-    if (x == "max") {
-      return (list.reduce(max));
-    } else if (x == "min") {
-      return (list.reduce(min));
-    }
   }
 }

@@ -8,6 +8,13 @@ import 'package:connectivity/connectivity.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
 import '../widgets/httpMethods.dart';
+import 'package:vibration/vibration.dart';
+import 'userAccount.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as syspaths;
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
 // import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:provider/provider.dart';
@@ -37,17 +44,6 @@ class _HiveScreenState extends State<HiveScreen> {
     return ((double.parse(value) * mod).round().toDouble() / mod);
   }
 
-  void _printValues(Measure measure) {
-    Map measuretoJson = measure.toJson();
-    setState(() {
-      _temperature = measuretoJson['temperature'].toString();
-      _humidity = measuretoJson['humidity'].toString();
-      _pressure = measuretoJson['pressure'].toString();
-      _time = measuretoJson['timestamp'].toString();
-      _tempModule = measuretoJson['boxTemperature'].toString();
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -62,6 +58,7 @@ class _HiveScreenState extends State<HiveScreen> {
     super.dispose();
   }
 
+  File _image;
   @override
   Widget build(BuildContext context) {
     var textStyle = TextStyle(fontSize: 18, height: 2);
@@ -82,8 +79,8 @@ class _HiveScreenState extends State<HiveScreen> {
                           children: [
                             Column(
                               children: [
-                                _roundedPhoto(
-                                    'assets/hive.jpg', _connectionStatus, 100.0)
+                                _roundedPhoto('assets/hive.jpg',
+                                    _connectionStatus, 100.0, context)
                               ],
                             ),
                           ])),
@@ -93,7 +90,7 @@ class _HiveScreenState extends State<HiveScreen> {
                         style: TextStyle(color: Colors.black, fontSize: 15)),
                   ),
                   Container(
-                      margin: EdgeInsets.only(top: 20, bottom: 30 ),
+                      margin: EdgeInsets.only(top: 20, bottom: 30),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -247,8 +244,9 @@ class _HiveScreenState extends State<HiveScreen> {
                           child: (RaisedButton(
                             onPressed: () async {
                               Measure measure = await fetchMeasures();
-                              List<Measure> todaysMeasures = await database.getMeasuresFromDate(DateTime.now());
-                              print('TODAYS MEASURES:'); 
+                              List<Measure> todaysMeasures = await database
+                                  .getMeasuresFromDate(DateTime.now());
+                              print('TODAYS MEASURES:');
                               print(todaysMeasures);
                               setState(() {
                                 _temperature = measure.temperature.toString();
@@ -298,11 +296,8 @@ class _HiveScreenState extends State<HiveScreen> {
                                 await fetchAllMeasures();
                             var numOfMeasuresAdded = 0;
                             for (Measure item in allMeasures) {
-                              // final list =
-                              //     await database.checkMeasureInDatabase(item);
-                              // if (list.length == 0) {
-                                print(database.insertMeasure(item));
-                                numOfMeasuresAdded += 1;
+                              print(database.insertMeasure(item));
+                              numOfMeasuresAdded += 1;
                               // }
                             }
                             final snackBar = SnackBar(
@@ -351,6 +346,7 @@ class _HiveScreenState extends State<HiveScreen> {
                                     Expanded(child: Text(reponse))
                                   ]),
                                   duration: const Duration(seconds: 1));
+                              Vibration.vibrate(pattern: [10, 200, 100, 500]);
                               Scaffold.of(context).showSnackBar(snackBar);
                             },
                             child: Text('Uśpij moduł',
@@ -387,7 +383,7 @@ class _HiveScreenState extends State<HiveScreen> {
                                         SizedBox(width: 20),
                                         Expanded(child: Text(reponse)),
                                       ]),
-                                    );
+                                    duration: const Duration(seconds: 1));
                                     Scaffold.of(context).showSnackBar(snackBar);
                                   },
                                   child: Text('Usuń pomiary',
@@ -421,7 +417,7 @@ class _HiveScreenState extends State<HiveScreen> {
                                             child:
                                                 Text('Zegar zsynchronizowany'))
                                       ]),
-                                    );
+                                    duration: const Duration(seconds: 1));
                                     Scaffold.of(context).showSnackBar(snackBar);
                                   },
                                   child: Text('Synchronizuj czas',
@@ -516,28 +512,94 @@ class _HiveScreenState extends State<HiveScreen> {
         break;
     }
   }
-}
 
-Container _roundedPhoto(var assetPath, Color connStatus, var size) => Container(
-      width: size,
-      height: size,
-      margin: EdgeInsets.only(left: 15, bottom: 20),
-      decoration: BoxDecoration(
-          color: connStatus,
-          image: new DecorationImage(
-            image: AssetImage(assetPath),
-            fit: BoxFit.cover,
-          ),
-          border: Border.all(
-            color: connStatus,
-            width: 5,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: connStatus,
-              blurRadius: 7,
-              spreadRadius: 2,
-            )
-          ]),
-    );
+  GestureDetector _roundedPhoto(
+          var assetPath, Color connStatus, var size, context) =>
+      GestureDetector(
+          onLongPress: () {
+            _showPicker(context);
+          },
+          child: Container(
+            width: size,
+            height: size,
+            margin: EdgeInsets.only(left: 15, bottom: 20),
+            decoration: BoxDecoration(
+                color: connStatus,
+                image: new DecorationImage(
+                  image: _image == null
+                      ? AssetImage("assets/hive.jpg")
+                      : FileImage(File("/var/mobile/Containers/Data/Application/9F8CA21F-22F8-4574-959E-324E5DA9BF1C/Documents/image_picker_45868901-98F0-4732-A726-5066B7C4EB48-1476-0000008FF6A9E2B8.jpg")),
+                  fit: BoxFit.cover,
+                ),
+                border: Border.all(
+                  color: connStatus,
+                  width: 5,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: connStatus,
+                    blurRadius: 7,
+                    spreadRadius: 2,
+                  )
+                ]),
+          ));
+
+  void _showPicker(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(
+            child: Container(
+              child: new Wrap(
+                children: <Widget>[
+                  new ListTile(
+                      leading: new Icon(Icons.photo_library),
+                      title: new Text('Galeria zdjęć'),
+                      onTap: () {
+                        _imgFromGallery();
+                        Navigator.of(context).pop();
+                      }),
+                  new ListTile(
+                    leading: new Icon(Icons.photo_camera),
+                    title: new Text('Aparat'),
+                    onTap: () {
+                      _imgFromCamera();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  _imgFromCamera() async {
+    File image = await ImagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 50,
+        maxWidth: 300,
+        maxHeight: 300);
+    setState(() {
+      _image = image;
+    });
+    final appDir = await syspaths.getApplicationDocumentsDirectory();
+    print(appDir);
+    final String fileName = path.basename(image.path);
+    print(fileName);
+    final File savedImage = await image.copy('${appDir.path}/$fileName');
+    print(savedImage);
+  }
+
+  _imgFromGallery() async {
+    File image = await ImagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+        maxWidth: 300,
+        maxHeight: 300);
+    setState(() {
+      _image = image;
+    });
+  }
+}

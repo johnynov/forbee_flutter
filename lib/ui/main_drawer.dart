@@ -5,15 +5,31 @@ import 'package:forbee/main.dart';
 import 'package:forbee/ui/measures.dart';
 import 'package:forbee/ui/charts.dart';
 import 'package:forbee/ui/userAccount.dart';
+import 'package:provider/provider.dart';
 import '../main.dart';
 import 'Hive.dart';
+import '../data/moor_database.dart';
 
-class MainDrawer extends StatelessWidget {
+class MainDrawer extends StatefulWidget {
+  @override
+  _MainDrawerState createState() => _MainDrawerState();
+}
+
+class _MainDrawerState extends State<MainDrawer> {
   double size = 85;
   var borderColor = Colors.orangeAccent;
 
   @override
   Widget build(BuildContext context) {
+    var database = Provider.of<AppDatabase>(context);
+    AppUser user;
+    database.getAllUsers().then((value) => user);
+    if(user == null){
+      database.insertAppUser(AppUser(name: "Jan", surname: "Wieczorek", photoPath: null));
+    }
+    database.getAllUsers().then((value) => user);
+    print(user);
+    // var imagePath = user.photoPath;
     var scr_h = MediaQuery.of(context).size.height;
     var scr_w = MediaQuery.of(context).size.width;
     return Container(
@@ -53,13 +69,12 @@ class MainDrawer extends StatelessWidget {
                     onLongPress: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => UserAccount()),
+                        MaterialPageRoute(builder: (context) => UserAccount()),
                       );
                     },
                   ),
                   Container(
-                      child: Text('Rysio, Pszczelarz',
+                      child: Text('Jan, Pszczelarz',
                           style: TextStyle(height: 1, fontSize: 16)),
                       margin: EdgeInsets.only(left: 30, bottom: 30))
                 ],
@@ -131,7 +146,7 @@ class MainDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
+                  MaterialPageRoute(builder: (context) => ChartScreen()),
                 );
               },
             ),

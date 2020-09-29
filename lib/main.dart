@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/hive': (_) => HiveScreen(),
           '/myMeasures': (_) => MeasuresScreen(),
-          '/databaseTest' : (_) => HomePage(),
+          '/databaseTest' : (_) => ChartScreen(),
           '/userAccount' : (_) => UserAccount(),
         },
         localizationsDelegates: [

@@ -4,9 +4,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'main_drawer.dart';
+import './charts.dart';
 
 import '../data/moor_database.dart';
-
 
 class MeasuresScreen extends StatefulWidget {
   @override
@@ -17,9 +17,19 @@ class _MeasuresScreenState extends State<MeasuresScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Moje pomiary'),
-        ),
+        appBar: AppBar(title: Text('Moje pomiary'), actions: <Widget>[
+          IconButton(
+              icon: Image.asset('assets/line-chart.png',
+                  scale: 1.0, height: 25.0, width: 25.0),
+              tooltip: 'Moje wykresy',
+              iconSize: 20,
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChartScreen()),
+                );
+              })
+        ]),
         drawer: MainDrawer(),
         body: Column(
           children: <Widget>[
@@ -72,7 +82,6 @@ class _MeasuresScreenState extends State<MeasuresScreen> {
 
 // String formatTileTimestamp(DateTime timestemp) {
 //   var formatter = new DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", 'en');
-
 
 //   return dateformatted;
 // }

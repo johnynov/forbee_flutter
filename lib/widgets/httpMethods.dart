@@ -16,7 +16,7 @@ Future<Measure> fetchMeasures() async {
       var measure = Measure(
           id: null,
           timestamp: DateTime.fromMillisecondsSinceEpoch(
-              (int.parse(values[0]) - 3600 * 2) * 1000),
+              (int.parse(values[0])- 2*3600) * 1000),
           temperature: double.parse(values[1]),
           humidity: double.parse(values[2]),
           pressure: double.parse(values[3]),

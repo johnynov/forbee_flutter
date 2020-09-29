@@ -383,12 +383,242 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   }
 }
 
+class AppUser extends DataClass implements Insertable<AppUser> {
+  final int id;
+  final String name;
+  final String surname;
+  final String photoPath;
+  AppUser({@required this.id, this.name, this.surname, this.photoPath});
+  factory AppUser.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      {String prefix}) {
+    final effectivePrefix = prefix ?? '';
+    final intType = db.typeSystem.forDartType<int>();
+    final stringType = db.typeSystem.forDartType<String>();
+    return AppUser(
+      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
+      name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
+      surname:
+          stringType.mapFromDatabaseResponse(data['${effectivePrefix}surname']),
+      photoPath: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}photo_path']),
+    );
+  }
+  factory AppUser.fromJson(Map<String, dynamic> json,
+      {ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return AppUser(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      surname: serializer.fromJson<String>(json['surname']),
+      photoPath: serializer.fromJson<String>(json['photoPath']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'surname': serializer.toJson<String>(surname),
+      'photoPath': serializer.toJson<String>(photoPath),
+    };
+  }
+
+  @override
+  AppUsersCompanion createCompanion(bool nullToAbsent) {
+    return AppUsersCompanion(
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      surname: surname == null && nullToAbsent
+          ? const Value.absent()
+          : Value(surname),
+      photoPath: photoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoPath),
+    );
+  }
+
+  AppUser copyWith({int id, String name, String surname, String photoPath}) =>
+      AppUser(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        surname: surname ?? this.surname,
+        photoPath: photoPath ?? this.photoPath,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('AppUser(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('surname: $surname, ')
+          ..write('photoPath: $photoPath')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => $mrjf($mrjc(id.hashCode,
+      $mrjc(name.hashCode, $mrjc(surname.hashCode, photoPath.hashCode))));
+  @override
+  bool operator ==(dynamic other) =>
+      identical(this, other) ||
+      (other is AppUser &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.surname == this.surname &&
+          other.photoPath == this.photoPath);
+}
+
+class AppUsersCompanion extends UpdateCompanion<AppUser> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> surname;
+  final Value<String> photoPath;
+  const AppUsersCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.surname = const Value.absent(),
+    this.photoPath = const Value.absent(),
+  });
+  AppUsersCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.surname = const Value.absent(),
+    this.photoPath = const Value.absent(),
+  });
+  AppUsersCompanion copyWith(
+      {Value<int> id,
+      Value<String> name,
+      Value<String> surname,
+      Value<String> photoPath}) {
+    return AppUsersCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      surname: surname ?? this.surname,
+      photoPath: photoPath ?? this.photoPath,
+    );
+  }
+}
+
+class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
+  final GeneratedDatabase _db;
+  final String _alias;
+  $AppUsersTable(this._db, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  GeneratedIntColumn _id;
+  @override
+  GeneratedIntColumn get id => _id ??= _constructId();
+  GeneratedIntColumn _constructId() {
+    return GeneratedIntColumn('id', $tableName, false,
+        hasAutoIncrement: true, declaredAsPrimaryKey: true);
+  }
+
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  GeneratedTextColumn _name;
+  @override
+  GeneratedTextColumn get name => _name ??= _constructName();
+  GeneratedTextColumn _constructName() {
+    return GeneratedTextColumn(
+      'name',
+      $tableName,
+      true,
+    );
+  }
+
+  final VerificationMeta _surnameMeta = const VerificationMeta('surname');
+  GeneratedTextColumn _surname;
+  @override
+  GeneratedTextColumn get surname => _surname ??= _constructSurname();
+  GeneratedTextColumn _constructSurname() {
+    return GeneratedTextColumn(
+      'surname',
+      $tableName,
+      true,
+    );
+  }
+
+  final VerificationMeta _photoPathMeta = const VerificationMeta('photoPath');
+  GeneratedTextColumn _photoPath;
+  @override
+  GeneratedTextColumn get photoPath => _photoPath ??= _constructPhotoPath();
+  GeneratedTextColumn _constructPhotoPath() {
+    return GeneratedTextColumn(
+      'photo_path',
+      $tableName,
+      true,
+    );
+  }
+
+  @override
+  List<GeneratedColumn> get $columns => [id, name, surname, photoPath];
+  @override
+  $AppUsersTable get asDslTable => this;
+  @override
+  String get $tableName => _alias ?? 'app_users';
+  @override
+  final String actualTableName = 'app_users';
+  @override
+  VerificationContext validateIntegrity(AppUsersCompanion d,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    if (d.id.present) {
+      context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
+    }
+    if (d.name.present) {
+      context.handle(
+          _nameMeta, name.isAcceptableValue(d.name.value, _nameMeta));
+    }
+    if (d.surname.present) {
+      context.handle(_surnameMeta,
+          surname.isAcceptableValue(d.surname.value, _surnameMeta));
+    }
+    if (d.photoPath.present) {
+      context.handle(_photoPathMeta,
+          photoPath.isAcceptableValue(d.photoPath.value, _photoPathMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppUser map(Map<String, dynamic> data, {String tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
+    return AppUser.fromData(data, _db, prefix: effectivePrefix);
+  }
+
+  @override
+  Map<String, Variable> entityToSql(AppUsersCompanion d) {
+    final map = <String, Variable>{};
+    if (d.id.present) {
+      map['id'] = Variable<int, IntType>(d.id.value);
+    }
+    if (d.name.present) {
+      map['name'] = Variable<String, StringType>(d.name.value);
+    }
+    if (d.surname.present) {
+      map['surname'] = Variable<String, StringType>(d.surname.value);
+    }
+    if (d.photoPath.present) {
+      map['photo_path'] = Variable<String, StringType>(d.photoPath.value);
+    }
+    return map;
+  }
+
+  @override
+  $AppUsersTable createAlias(String alias) {
+    return $AppUsersTable(_db, alias);
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $MeasuresTable _measures;
   $MeasuresTable get measures => _measures ??= $MeasuresTable(this);
+  $AppUsersTable _appUsers;
+  $AppUsersTable get appUsers => _appUsers ??= $AppUsersTable(this);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [measures];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [measures, appUsers];
 }
