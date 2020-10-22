@@ -59,6 +59,8 @@ class Measure extends DataClass implements Insertable<Measure> {
       sentToFirebase: serializer.fromJson<bool>(json['sentToFirebase']),
     );
   }
+
+  int get parameter => null;
   @override
   Map<String, dynamic> toJson({ValueSerializer serializer}) {
     serializer ??= moorRuntimeOptions.defaultSerializer;
@@ -383,34 +385,44 @@ class $MeasuresTable extends Measures with TableInfo<$MeasuresTable, Measure> {
   }
 }
 
-class AppUser extends DataClass implements Insertable<AppUser> {
+class Appuser extends DataClass implements Insertable<Appuser> {
   final int id;
   final String name;
   final String surname;
   final String photoPath;
-  AppUser({@required this.id, this.name, this.surname, this.photoPath});
-  factory AppUser.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+  final bool sentToFirebase;
+  Appuser(
+      {@required this.id,
+      this.name,
+      this.surname,
+      this.photoPath,
+      @required this.sentToFirebase});
+  factory Appuser.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
-    return AppUser(
+    final boolType = db.typeSystem.forDartType<bool>();
+    return Appuser(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
       surname:
           stringType.mapFromDatabaseResponse(data['${effectivePrefix}surname']),
       photoPath: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}photo_path']),
+      sentToFirebase: boolType
+          .mapFromDatabaseResponse(data['${effectivePrefix}sent_to_firebase']),
     );
   }
-  factory AppUser.fromJson(Map<String, dynamic> json,
+  factory Appuser.fromJson(Map<String, dynamic> json,
       {ValueSerializer serializer}) {
     serializer ??= moorRuntimeOptions.defaultSerializer;
-    return AppUser(
+    return Appuser(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       surname: serializer.fromJson<String>(json['surname']),
       photoPath: serializer.fromJson<String>(json['photoPath']),
+      sentToFirebase: serializer.fromJson<bool>(json['sentToFirebase']),
     );
   }
   @override
@@ -421,12 +433,13 @@ class AppUser extends DataClass implements Insertable<AppUser> {
       'name': serializer.toJson<String>(name),
       'surname': serializer.toJson<String>(surname),
       'photoPath': serializer.toJson<String>(photoPath),
+      'sentToFirebase': serializer.toJson<bool>(sentToFirebase),
     };
   }
 
   @override
-  AppUsersCompanion createCompanion(bool nullToAbsent) {
-    return AppUsersCompanion(
+  AppusersCompanion createCompanion(bool nullToAbsent) {
+    return AppusersCompanion(
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
       surname: surname == null && nullToAbsent
@@ -435,75 +448,95 @@ class AppUser extends DataClass implements Insertable<AppUser> {
       photoPath: photoPath == null && nullToAbsent
           ? const Value.absent()
           : Value(photoPath),
+      sentToFirebase: sentToFirebase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sentToFirebase),
     );
   }
 
-  AppUser copyWith({int id, String name, String surname, String photoPath}) =>
-      AppUser(
+  Appuser copyWith(
+          {int id,
+          String name,
+          String surname,
+          String photoPath,
+          bool sentToFirebase}) =>
+      Appuser(
         id: id ?? this.id,
         name: name ?? this.name,
         surname: surname ?? this.surname,
         photoPath: photoPath ?? this.photoPath,
+        sentToFirebase: sentToFirebase ?? this.sentToFirebase,
       );
   @override
   String toString() {
-    return (StringBuffer('AppUser(')
+    return (StringBuffer('Appuser(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('surname: $surname, ')
-          ..write('photoPath: $photoPath')
+          ..write('photoPath: $photoPath, ')
+          ..write('sentToFirebase: $sentToFirebase')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(id.hashCode,
-      $mrjc(name.hashCode, $mrjc(surname.hashCode, photoPath.hashCode))));
+  int get hashCode => $mrjf($mrjc(
+      id.hashCode,
+      $mrjc(
+          name.hashCode,
+          $mrjc(surname.hashCode,
+              $mrjc(photoPath.hashCode, sentToFirebase.hashCode)))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
-      (other is AppUser &&
+      (other is Appuser &&
           other.id == this.id &&
           other.name == this.name &&
           other.surname == this.surname &&
-          other.photoPath == this.photoPath);
+          other.photoPath == this.photoPath &&
+          other.sentToFirebase == this.sentToFirebase);
 }
 
-class AppUsersCompanion extends UpdateCompanion<AppUser> {
+class AppusersCompanion extends UpdateCompanion<Appuser> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> surname;
   final Value<String> photoPath;
-  const AppUsersCompanion({
+  final Value<bool> sentToFirebase;
+  const AppusersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.surname = const Value.absent(),
     this.photoPath = const Value.absent(),
+    this.sentToFirebase = const Value.absent(),
   });
-  AppUsersCompanion.insert({
+  AppusersCompanion.insert({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.surname = const Value.absent(),
     this.photoPath = const Value.absent(),
+    this.sentToFirebase = const Value.absent(),
   });
-  AppUsersCompanion copyWith(
+  AppusersCompanion copyWith(
       {Value<int> id,
       Value<String> name,
       Value<String> surname,
-      Value<String> photoPath}) {
-    return AppUsersCompanion(
+      Value<String> photoPath,
+      Value<bool> sentToFirebase}) {
+    return AppusersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       surname: surname ?? this.surname,
       photoPath: photoPath ?? this.photoPath,
+      sentToFirebase: sentToFirebase ?? this.sentToFirebase,
     );
   }
 }
 
-class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
+class $AppusersTable extends Appusers with TableInfo<$AppusersTable, Appuser> {
   final GeneratedDatabase _db;
   final String _alias;
-  $AppUsersTable(this._db, [this._alias]);
+  $AppusersTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   GeneratedIntColumn _id;
   @override
@@ -549,16 +582,28 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
     );
   }
 
+  final VerificationMeta _sentToFirebaseMeta =
+      const VerificationMeta('sentToFirebase');
+  GeneratedBoolColumn _sentToFirebase;
   @override
-  List<GeneratedColumn> get $columns => [id, name, surname, photoPath];
+  GeneratedBoolColumn get sentToFirebase =>
+      _sentToFirebase ??= _constructSentToFirebase();
+  GeneratedBoolColumn _constructSentToFirebase() {
+    return GeneratedBoolColumn('sent_to_firebase', $tableName, false,
+        defaultValue: Constant(false));
+  }
+
   @override
-  $AppUsersTable get asDslTable => this;
+  List<GeneratedColumn> get $columns =>
+      [id, name, surname, photoPath, sentToFirebase];
   @override
-  String get $tableName => _alias ?? 'app_users';
+  $AppusersTable get asDslTable => this;
   @override
-  final String actualTableName = 'app_users';
+  String get $tableName => _alias ?? 'appusers';
   @override
-  VerificationContext validateIntegrity(AppUsersCompanion d,
+  final String actualTableName = 'appusers';
+  @override
+  VerificationContext validateIntegrity(AppusersCompanion d,
       {bool isInserting = false}) {
     final context = VerificationContext();
     if (d.id.present) {
@@ -576,19 +621,25 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
       context.handle(_photoPathMeta,
           photoPath.isAcceptableValue(d.photoPath.value, _photoPathMeta));
     }
+    if (d.sentToFirebase.present) {
+      context.handle(
+          _sentToFirebaseMeta,
+          sentToFirebase.isAcceptableValue(
+              d.sentToFirebase.value, _sentToFirebaseMeta));
+    }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  AppUser map(Map<String, dynamic> data, {String tablePrefix}) {
+  Appuser map(Map<String, dynamic> data, {String tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
-    return AppUser.fromData(data, _db, prefix: effectivePrefix);
+    return Appuser.fromData(data, _db, prefix: effectivePrefix);
   }
 
   @override
-  Map<String, Variable> entityToSql(AppUsersCompanion d) {
+  Map<String, Variable> entityToSql(AppusersCompanion d) {
     final map = <String, Variable>{};
     if (d.id.present) {
       map['id'] = Variable<int, IntType>(d.id.value);
@@ -602,12 +653,16 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
     if (d.photoPath.present) {
       map['photo_path'] = Variable<String, StringType>(d.photoPath.value);
     }
+    if (d.sentToFirebase.present) {
+      map['sent_to_firebase'] =
+          Variable<bool, BoolType>(d.sentToFirebase.value);
+    }
     return map;
   }
 
   @override
-  $AppUsersTable createAlias(String alias) {
-    return $AppUsersTable(_db, alias);
+  $AppusersTable createAlias(String alias) {
+    return $AppusersTable(_db, alias);
   }
 }
 
@@ -615,10 +670,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $MeasuresTable _measures;
   $MeasuresTable get measures => _measures ??= $MeasuresTable(this);
-  $AppUsersTable _appUsers;
-  $AppUsersTable get appUsers => _appUsers ??= $AppUsersTable(this);
+  $AppusersTable _appusers;
+  $AppusersTable get appusers => _appusers ??= $AppusersTable(this);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [measures, appUsers];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [measures, appusers];
 }

@@ -15,14 +15,18 @@ class Measures extends Table {
   Set<Column> get primaryKey => {timestamp};
 }
 
-class AppUsers extends Table {
+class Appusers extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().nullable()();
   TextColumn get surname => text().nullable()();
   TextColumn get photoPath => text().nullable()();
+  BoolColumn get sentToFirebase => boolean().withDefault(Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {name};
 }
 
-@UseMoor(tables: [Measures, AppUsers])
+@UseMoor(tables: [Measures, Appusers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
       // Specify the location of the database file
@@ -33,7 +37,13 @@ class AppDatabase extends _$AppDatabase {
         ));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+    //Users Database Methods
+  Future<List<Appuser>> getAllUsers() => select(appusers).get();
+  Future insertAppUser(Appuser appuser) => into(appusers).insert(appuser, orReplace: true);
+  Future updateAppUser(Appuser appuser) => update(appusers).replace(appuser);
+  Future deleteAllUsers() => delete(appusers).go();
 
   //Measures Database methods
   Future<List<Measure>> getAllMeasures() => select(measures).get();
@@ -44,8 +54,7 @@ class AppDatabase extends _$AppDatabase {
           ]))
         .watch();
   }
-  Future insertMeasure(Measure measure) =>
-      into(measures).insert(measure, orReplace: false);
+  Future insertMeasure(Measure measure) => into(measures).insert(measure, orReplace: false);
   Future updateMeasure(Measure measure) => update(measures).replace(measure);
   Future deleteMeasure(Measure measure) => delete(measures).delete(measure);
   Future<List<Measure>> checkMeasureInDatabase(Measure measure) =>
@@ -68,7 +77,6 @@ class AppDatabase extends _$AppDatabase {
           ]))
         .get();
   }
-
   Future<List<DateTime>> getDistinctDays() {
     final year = measures.timestamp.year;
     final month = measures.timestamp.month;
@@ -79,10 +87,6 @@ class AppDatabase extends _$AppDatabase {
         .map((row) =>
             DateTime.utc(row.read(year), row.read(month), row.read(day))).get();
   }
-  //Users Database Methods
-  Future<List<AppUser>> getAllUsers() => select(appUsers).get();
-  Future insertAppUser(AppUser appuser) => into(appUsers).insert(appuser, orReplace: false);
-  Future updateAppUser(AppUser user) => update(appUsers).replace(user);
 }
 
 // Moor works by source gen. This file will all the generated code.

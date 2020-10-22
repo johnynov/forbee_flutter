@@ -3,7 +3,7 @@ import 'package:forbee/data/moor_database.dart';
 import 'package:forbee/ui/charts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'ui/Hive.dart';
+import 'ui/hive.dart';
 import 'ui/main_drawer.dart';
 import 'ui/measures.dart';
 import 'ui/userAccount.dart';

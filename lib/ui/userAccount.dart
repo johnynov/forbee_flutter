@@ -4,7 +4,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as syspaths;
-import './Hive.dart';
+import 'package:provider/provider.dart';
+import '../data/moor_database.dart';
+import 'hive.dart';
 
 class UserAccount extends StatefulWidget {
   @override
@@ -15,6 +17,7 @@ class _UserAccountState extends State<UserAccount> {
   File _image;
   @override
   Widget build(BuildContext context) {
+    final database = Provider.of<AppDatabase>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Profil"),
@@ -31,7 +34,8 @@ class _UserAccountState extends State<UserAccount> {
             },
             child: Column(
               children: [
-                _roundedPhoto('assets/profilowe.jpg', Colors.orange, 100.0, context)
+                _roundedPhoto(
+                    'assets/profilowe.jpg', Colors.orange, 100.0, context)
               ],
             ),
           ))
@@ -55,7 +59,7 @@ class _UserAccountState extends State<UserAccount> {
                 image: new DecorationImage(
                   image: _image == null
                       ? AssetImage(assetPath) //default photo
-                      : FileImage(_image), // photo from image picker  
+                      : FileImage(_image), // photo from image picker
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(
@@ -71,7 +75,7 @@ class _UserAccountState extends State<UserAccount> {
                   )
                 ]),
           ));
-      
+
   void _showPicker(context) {
     showModalBottomSheet(
         context: context,
@@ -108,6 +112,14 @@ class _UserAccountState extends State<UserAccount> {
         imageQuality: 50,
         maxWidth: 300,
         maxHeight: 300);
+    Appuser user = Appuser(
+        id: 1,
+        name: "Jan",
+        surname: "W",
+        photoPath: image.path,
+        sentToFirebase: null);
+    // await database.updateAppUser(user);
+
     setState(() {
       _image = image;
     });
@@ -123,10 +135,16 @@ class _UserAccountState extends State<UserAccount> {
         imageQuality: 50,
         maxWidth: 300,
         maxHeight: 300);
+    Appuser user = Appuser(
+        id: 1,
+        name: "Jan",
+        surname: "W",
+        photoPath: image.path,
+        sentToFirebase: null);
+
+    // await database.updateAppUser(user);
     setState(() {
       _image = image;
     });
   }
-
-  
 }

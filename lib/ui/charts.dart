@@ -1,13 +1,18 @@
+import 'dart:core';
 import 'package:flutter/material.dart';
 import '../data/moor_database.dart';
 import 'main_drawer.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'dart:math';
 import 'package:font_awesome_flutter/fa_icon.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_rounded_date_picker/rounded_picker.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
+import '../widgets/chartParameterTile.dart';
+
+// import 'package:syncfusion_flutter_sliders/sliders.dart';
+
+// import 'package:charcode/charcode.dart';
 
 class ChartScreen extends StatefulWidget {
   @override
@@ -16,14 +21,21 @@ class ChartScreen extends StatefulWidget {
 
 class _ChartScreenState extends State<ChartScreen> {
   List<Measure> _series1;
-  DateTime _dateTime;
+  DateTime selectedDate;
+
+  bool rebuild = false;
 
   @override
   void initState() {
     super.initState();
-    _getDataFromDatabase(DateTime.now()).then((value) => this._series1 = value);
-    print(this._series1);
-    this._series1 = [];
+
+    // _rangeController = RangeController(start: _values.start, end: _values.end);
+  }
+
+  @override
+  void dispose() {
+    // _rangeController.dispose();
+    super.dispose();
   }
 
   Future<List<Measure>> _getDataFromDatabase(DateTime day) async {
@@ -35,9 +47,13 @@ class _ChartScreenState extends State<ChartScreen> {
   @override
   Widget build(BuildContext context) {
     final database = Provider.of<AppDatabase>(context);
-    var dateForGraphs = DateTime.now();
+
     _getDataFromDatabase(DateTime.now()).then((value) => _series1 = value);
-    // print(_series1);
+    print(_series1);
+
+    var screenHeight = MediaQuery.of(context).size.height;
+    var screenWidth = MediaQuery.of(context).size.width;
+
     return DefaultTabController(
         length: 3,
         child: Scaffold(
@@ -54,6 +70,7 @@ class _ChartScreenState extends State<ChartScreen> {
                   tooltip: 'Wybierz dzień',
                   iconSize: 20,
                   onPressed: () async {
+                    // setState(() => rebuild = false);
                     List<DateTime> measuresDays =
                         await database.getDistinctDays();
                     List<DateTime> daysToHide = calculateDayList(
@@ -66,34 +83,49 @@ class _ChartScreenState extends State<ChartScreen> {
                       }
                     });
                     print("Zapamiętana wartość datetime: " +
-                        _dateTime.toString());
+                        selectedDate.toString());
                     showRoundedDatePicker(
-                      context: context,
-                      initialDate:
-                          _dateTime == null ? measuresDays.last : _dateTime,
-                      firstDate: DateTime(DateTime.now().year - 1),
-                      lastDate: DateTime(DateTime.now().year + 1),
-                      borderRadius: 16,
-                      theme: ThemeData(primarySwatch: Colors.orange),
-                      listDateDisabled: daysToShow,
-                      customWeekDays: [
-                        "Pon",
-                        "Wt",
-                        "Śr",
-                        "Czw",
-                        "Pt",
-                        "Sob",
-                        "Nd"
-                      ],
-                    ).then((pickedClendarDate) {
-                      setState(() {
-                        _dateTime = pickedClendarDate;
-                        print("Wybrany initial date: " + _dateTime.toString());
-                        dateForGraphs = pickedClendarDate;
-                        _getDataFromDatabase(dateForGraphs)
-                            .then((value) => _series1 = value);
-                        // print(_series1);
-                      });
+                            context: context,
+                            height: 300,
+                            initialDate: selectedDate == null
+                                ? measuresDays.last
+                                : selectedDate,
+                            firstDate: DateTime(DateTime.now().year - 1),
+                            lastDate: DateTime(DateTime.now().year + 1),
+                            borderRadius: 16,
+                            theme: ThemeData(
+                                primarySwatch: Colors.amber,
+                                accentColor: Colors.green[500],
+                                textTheme: TextTheme(
+                                  body1: TextStyle(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                disabledColor: Colors.grey),
+                            listDateDisabled: daysToShow,
+                            customWeekDays: [
+                              "Pon",
+                              "Wt",
+                              "Śr",
+                              "Czw",
+                              "Pt",
+                              "Sob",
+                              "Nd"
+                            ],
+                            textPositiveButton: "WYBIERZ",
+                            textNegativeButton: "ANULUJ")
+                        .then((pickedClendarDate) {
+                      if (pickedClendarDate != null) {
+                        setState(() {
+                          rebuild = true;
+                          selectedDate = pickedClendarDate;
+                          print("Wybrany data z kalendarza: " +
+                              selectedDate.toString());
+                          _getDataFromDatabase(pickedClendarDate)
+                              .then((value) => _series1 = value);
+                          // print(_series1);
+                        });
+                      }
                     });
                   },
                 )
@@ -105,134 +137,153 @@ class _ChartScreenState extends State<ChartScreen> {
               Column(
                 children: <Widget>[
                   Container(
-                      height: 300,
-                      margin: EdgeInsets.only(left: 5, right: 1),
-                      child: charts.TimeSeriesChart(
-                        /*seriesList=*/ [
-                          charts.Series<Measure, DateTime>(
-                            id: 'Temperatura w ulu',
-                            colorFn: (_, __) =>
-                                charts.MaterialPalette.blue.shadeDefault,
-                            domainFn: (Measure measure, _) => measure.timestamp,
-                            measureFn: (Measure measure, _) =>
-                                measure.temperature,
-                            data: this._series1,
-                          ),
+                    height: screenHeight * 0.5,
+                    child: SfCartesianChart(
+                        // title: ChartTitle(text: DateFormat('dd MMMM yyyy').format(selectedDate).toString()),
+                        enableAxisAnimation: true,
+                        primaryXAxis: DateTimeAxis(
+                            title: AxisTitle(text: "Godzina"),
+                            intervalType: DateTimeIntervalType.hours,
+                            majorTickLines: MajorTickLines(
+                                size: 7, width: 2, color: Colors.red),
+                            minorTickLines: MinorTickLines(
+                                size: 5, width: 2, color: Colors.blue),
+                            minorTicksPerInterval: 1),
+                        primaryYAxis: NumericAxis(
+                            title: AxisTitle(text: "Temperatura"),
+                            labelFormat: "{value} \u00B0C"),
+                        series: <LineSeries>[
+                          LineSeries<Measure, DateTime>(
+                              dataSource: this._series1,
+                              color: Colors.blueAccent,
+                              xValueMapper: (Measure measure, _) =>
+                                  measure.timestamp,
+                              yValueMapper: (Measure measure, _) =>
+                                  measure.temperature,
+                              dataLabelSettings:
+                                  DataLabelSettings(isVisible: false),
+                              markerSettings: MarkerSettings(isVisible: true)),
                         ],
-                        defaultInteractions: false,
-                        defaultRenderer: charts.LineRendererConfig(
-                          includePoints: true,
-                          includeArea: true,
-                          stacked: true,
+                        // onMarkerRender: _renderGradient(),
+                        tooltipBehavior: TooltipBehavior(enable: true)),
+                  ),
+                  Container(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            parameterTile(
+                                context,
+                                minTempTile),
+                            parameterTile(
+                                context, maxTempTile
+                                )
+                          ],
                         ),
-                        animate: false,
-                        primaryMeasureAxis: new charts.NumericAxisSpec(
-                            viewport: new charts.NumericExtents(20,27)),
-                        behaviors: [
-                          // Add title.
-                          charts.ChartTitle('Temperatura w ulu'),
-                          // Add legend.
-                          charts.SeriesLegend(
-                              position: charts.BehaviorPosition.bottom),
-                          //Add pan and scroll behaviour
-                          new charts.PanAndZoomBehavior(),
-                          // Highlight X and Y value of selected point.
-                          charts.LinePointHighlighter(
-                            showHorizontalFollowLine:
-                                charts.LinePointHighlighterFollowLineType.all,
-                            showVerticalFollowLine: charts
-                                .LinePointHighlighterFollowLineType.nearest,
-                          ),
-                        ],
-                      ))
+                        Row()
+                      ],
+                    ),
+                  )
                 ],
               ),
               Column(
                 children: <Widget>[
                   Container(
-                      height: 300,
-                      margin: EdgeInsets.only(left: 5, right: 1),
-                      child: charts.TimeSeriesChart(
-                        /*seriesList=*/ [
-                          charts.Series<Measure, DateTime>(
-                            id: 'Wilgotność w ulu',
-                            colorFn: (_, __) =>
-                                charts.MaterialPalette.blue.shadeDefault,
-                            domainFn: (Measure measure, _) => measure.timestamp,
-                            measureFn: (Measure measure, _) => measure.humidity,
-                            data: this._series1,
-                          ),
+                    height: screenHeight * 0.5,
+                    child: SfCartesianChart(
+                        // title: ChartTitle(text: DateFormat('dd MMMM yyyy').format(selectedDate).toString()),
+                        enableAxisAnimation: true,
+                        primaryXAxis: DateTimeAxis(
+                            title: AxisTitle(text: "Godzina"),
+                            intervalType: DateTimeIntervalType.hours,
+                            majorTickLines: MajorTickLines(
+                                size: 7, width: 2, color: Colors.red),
+                            minorTickLines: MinorTickLines(
+                                size: 5, width: 2, color: Colors.blue),
+                            minorTicksPerInterval: 1),
+                        primaryYAxis: NumericAxis(
+                            title: AxisTitle(text: "Wilgotność"),
+                            labelFormat: "{value} \u00B0C"),
+                        series: <LineSeries>[
+                          LineSeries<Measure, DateTime>(
+                              dataSource: this._series1,
+                              color: Colors.blueAccent,
+                              xValueMapper: (Measure measure, _) =>
+                                  measure.timestamp,
+                              yValueMapper: (Measure measure, _) =>
+                                  measure.humidity,
+                              dataLabelSettings:
+                                  DataLabelSettings(isVisible: false),
+                              markerSettings: MarkerSettings(isVisible: true)),
                         ],
-                        defaultInteractions: false,
-                        defaultRenderer: charts.LineRendererConfig(
-                          includePoints: true,
-                          includeArea: true,
-                          stacked: true,
+                        // onMarkerRender: _renderGradient(),
+                        tooltipBehavior: TooltipBehavior(enable: true)),
+                  ),
+                  Container(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            parameterTile(
+                                context,
+                                minHumidityTile),
+                            parameterTile(
+                                context, maxHumidityTile
+                                )
+                          ],
                         ),
-                        animate: false,
-                        primaryMeasureAxis: new charts.NumericAxisSpec(
-                            viewport: new charts.NumericExtents(0, 100)),
-                        behaviors: [
-                          // Add title.
-                          charts.ChartTitle('Wilgotność w ulu'),
-                          // Add legend.
-                          charts.SeriesLegend(
-                              position: charts.BehaviorPosition.bottom),
-                          //Add pan and scroll behaviour
-                          new charts.PanAndZoomBehavior(),
-                          // Highlight X and Y value of selected point.
-                          charts.LinePointHighlighter(
-                            showHorizontalFollowLine:
-                                charts.LinePointHighlighterFollowLineType.all,
-                            showVerticalFollowLine: charts
-                                .LinePointHighlighterFollowLineType.nearest,
-                          ),
-                        ],
-                      ))
+                        Row()
+                      ],
+                    ),
+                  )
                 ],
               ),
               Column(
                 children: <Widget>[
                   Container(
-                      height: 300,
-                      margin: EdgeInsets.only(left: 5, right: 1),
-                      child: charts.TimeSeriesChart(
-                        /*seriesList=*/ [
-                          charts.Series<Measure, DateTime>(
-                            id: 'Ciśnienie w ulu',
-                            colorFn: (_, __) =>
-                                charts.MaterialPalette.blue.shadeDefault,
-                            domainFn: (Measure measure, _) => measure.timestamp,
-                            measureFn: (Measure measure, _) => measure.pressure,
-                            data: this._series1,
-                          ),
+                    height: screenHeight * 0.5,
+                    child: SfCartesianChart(
+                        enableAxisAnimation: false,
+                        primaryXAxis: DateTimeAxis(
+                            title: AxisTitle(text: "Godzina"),
+                            intervalType: DateTimeIntervalType.hours),
+                        primaryYAxis: NumericAxis(
+                            title: AxisTitle(text: "Ciśnienie"),
+                            labelFormat: "{value} hPa"),
+                        series: <LineSeries>[
+                          LineSeries<Measure, DateTime>(
+                              dataSource: this._series1,
+                              color: Colors.blueAccent,
+                              xValueMapper: (Measure measure, _) =>
+                                  measure.timestamp,
+                              yValueMapper: (Measure measure, _) =>
+                                  measure.pressure,
+                              dataLabelSettings:
+                                  DataLabelSettings(isVisible: false),
+                              markerSettings: MarkerSettings(isVisible: true)),
                         ],
-                        defaultInteractions: false,
-                        defaultRenderer: charts.LineRendererConfig(
-                          includePoints: true,
-                          includeArea: true,
-                          stacked: true,
+                        tooltipBehavior: TooltipBehavior(enable: true)),
+                  ),
+                  Container(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            parameterTile(
+                                context,
+                                minPresTile),
+                            parameterTile(
+                                context, maxPresTile
+                                )
+                          ],
                         ),
-                        animate: false,
-                        primaryMeasureAxis: new charts.NumericAxisSpec(
-                            viewport: new charts.NumericExtents(950, 1050)),
-                        behaviors: [
-                          // Add title.
-                          charts.ChartTitle('Ciśnienie w ulu'),
-                          // Add legend.
-                          charts.SeriesLegend(
-                              position: charts.BehaviorPosition.bottom),
-                          //Add pan and scroll behaviour
-                          new charts.PanAndZoomBehavior(),
-                          // Highlight X and Y value of selected point.
-                          charts.LinePointHighlighter(
-                            showHorizontalFollowLine:
-                                charts.LinePointHighlighterFollowLineType.all,
-                            showVerticalFollowLine: charts
-                                .LinePointHighlighterFollowLineType.nearest,
-                          ),
-                        ],
-                      ))
+                        Row()
+                      ],
+                    ),
+                  )
                 ],
               ),
             ])));
@@ -244,5 +295,83 @@ class _ChartScreenState extends State<ChartScreen> {
       days.add(startDate.add(Duration(days: i)));
     }
     return days;
+  }
+
+  String _findMaxParameter() {
+    List<double> daysMeasuresList = [];
+    print("DANE" + _series1.toString());
+    if (_series1 != null) {
+      for (var measure in _series1) {
+        daysMeasuresList.add(measure.temperature);
+        print(measure.temperature);
+      }
+      if (daysMeasuresList.isNotEmpty) {
+        daysMeasuresList.sort();
+        print(daysMeasuresList);
+        return daysMeasuresList.last.toString();
+      }
+    } else {
+      return "";
+    }
+  }
+
+  String _findMinParameter() {
+    List<double> daysMeasuresList = [];
+    print("DANE" + _series1.toString());
+    if (_series1 != null) {
+      for (var measure in _series1) {
+        daysMeasuresList.add(measure.temperature);
+        print(measure.temperature);
+      }
+      if (daysMeasuresList.isNotEmpty) {
+        daysMeasuresList.sort();
+        print(daysMeasuresList);
+        return daysMeasuresList.first.toString();
+      }
+    } else {
+      return "";
+    }
+  }
+
+  bool is_between(int i, double min, double max) {
+    if (min > i && i <= max) {
+      return true;
+    } else {
+      return false;
+    }
+    ;
+  }
+
+  _renderGradient() {
+    double nautical_twilight_begin = 4.02;
+    double civil_twilight_begin = 4.39;
+    double sunrise = 5.12;
+    double solar_noon = 10.24;
+    double sunset = 15.35;
+    double civil_twilight_ends = 16.08; //zmierzch cywilny
+    double nautical_twilight_ends = 16.45; // zmierzch morski
+
+    return ((MarkerRenderArgs args) {
+      if (args.pointIndex == 0) {
+        args.color = const Color.fromRGBO(207, 124, 168, 1);
+      } else if (is_between(
+          args.pointIndex, nautical_twilight_ends, civil_twilight_begin)) {
+        args.color = const Color.fromRGBO(210, 133, 167, 1);
+      } else if (is_between(args.pointIndex, civil_twilight_begin, sunrise)) {
+        args.color = const Color.fromRGBO(219, 128, 161, 1);
+      } else if (is_between(args.pointIndex, sunrise, solar_noon)) {
+        args.color = const Color.fromRGBO(213, 143, 151, 1);
+      } else if (is_between(args.pointIndex, solar_noon, sunset)) {
+        args.color = const Color.fromRGBO(226, 157, 126, 1);
+      } else if (is_between(args.pointIndex, sunset, civil_twilight_ends)) {
+        args.color = const Color.fromRGBO(220, 169, 122, 1);
+      } else if (is_between(
+          args.pointIndex, civil_twilight_ends, nautical_twilight_ends)) {
+        args.color = const Color.fromRGBO(221, 176, 108, 1);
+      } else if (is_between(
+          args.pointIndex, nautical_twilight_ends, nautical_twilight_begin)) {
+        args.color = const Color.fromRGBO(222, 187, 97, 1);
+      }
+    });
   }
 }
