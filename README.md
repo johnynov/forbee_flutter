@@ -1,7 +1,8 @@
 # Forbee - Hive monitoring
 
 App developed during my Master Thesis - used to control a module inside beehive.
-For communication it uses an API and WiFi protocol.
+
+For communication it uses an HTTP API and WiFi protocol.
 
 Used Flutter libraries: 
 - Provider,
